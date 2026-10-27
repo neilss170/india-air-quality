@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>India Air Quality</title>
 <meta name="description" content="Air quality and weather for 15 Indian cities since August 2022: a daily BigQuery + dbt pipeline.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%2214%22 fill=%22%232a78d6%22/%3E%3Cpath d=%22M8 19c3-6 6 2 9-3s4-3 7-1%22 stroke=%22white%22 stroke-width=%223%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3C/svg%3E">
 <link rel="stylesheet" href="styles.css">
 <script>
   // apply a saved theme before first paint
@@ -27,6 +28,7 @@
     </div>
     <div class="top-right">
       <span class="pill" id="freshness" role="status">Loading data…</span>
+      <button class="btn" id="tour-start" type="button">Take the tour</button>
       <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light and dark theme">Dark mode</button>
     </div>
   </header>
@@ -136,5 +138,6 @@
 </main>
 <div class="tooltip" id="tooltip" role="tooltip"></div>
 <script src="app.js" defer></script>
+<script src="tour.js" defer></script>
 </body>
 </html>

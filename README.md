@@ -5,11 +5,18 @@ Open-Meteo APIs → BigQuery → dbt (models and tests) → a static dashboard. 
 an Airflow DAG handles backfills.
 
 - Dashboard: [neilss170.github.io/india-air-quality](https://neilss170.github.io/india-air-quality/)
+- Guided tour of the dashboard: [neilss170.github.io/india-air-quality/?tour](https://neilss170.github.io/india-air-quality/?tour)
 - dbt docs and lineage: [neilss170.github.io/india-air-quality/dbt](https://neilss170.github.io/india-air-quality/dbt/)
 
 Every number in this README comes from a measured run; the reports are in [`reports/`](reports/).
 
 ## Tour
+
+The live page has a guided tour (**Take the tour** in the header, or open it with
+[`?tour`](https://neilss170.github.io/india-air-quality/?tour)): 11 steps that spotlight each part of the page and
+explain what it shows. Arrow keys move between steps and Esc closes it; the page stays usable during the tour.
+
+![Guided tour, step 7: the Diwali chart in the spotlight](assets/screenshots/0-guided-tour.png)
 
 **1. Overview.** Freshness of the newest hour, headline numbers, and the two indices: the full CPCB AQI and the
 PM index the dashboard leads with. Cities are ranked by mean index; the category mix shows how often each city's air

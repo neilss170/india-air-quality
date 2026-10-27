@@ -498,5 +498,6 @@ fetch("data/dashboard.json", { cache: "no-cache" })
   .then((data) => {
     D = data;
     renderHeader(); countUp(); wire(); renderAll();
+    document.dispatchEvent(new Event("dashboard:ready"));
   })
   .catch((err) => { $("#freshness").textContent = `Could not load data (${err.message})`; });
