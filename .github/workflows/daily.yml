@@ -57,6 +57,8 @@ jobs:
         run: |
           mkdir -p site/dbt
           cp -r docs/. site/
+          # stamp asset URLs with the commit so browsers never mix a new page with cached old CSS/JS
+          sed -i "s/?v=dev/?v=${GITHUB_SHA::7}/g" site/index.html
           python scripts/export_dashboard.py --out site/data/dashboard.json
           cp dbt/target/static_index.html site/dbt/index.html
 
