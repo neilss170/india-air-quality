@@ -1,0 +1,38 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Hourly Open-Meteo data written by `loader/` (one partition per month, replaced whole on each load).
+    database: "{{ env_var('GCP_PROJECT') }}"
+    schema: raw
+    config:
+      # loaded_at is stamped by every load, and the daily run always rewrites the current month,
+      # so max(loaded_at) is the time of the last successful run. The cron runs once a day.
+      loaded_at_field: loaded_at
+      freshness:
+        warn_after: {count: 30, period: hour}
+        error_after: {count: 54, period: hour}
+    tables:
+      - name: air_quality_hourly
+        description: CAMS global model (via Open-Meteo), µg/m³, one row per city per UTC hour.
+        columns:
+          - name: city
+            data_tests: [not_null]
+          - name: ts
+            description: Start of the hour, UTC.
+            data_tests: [not_null]
+        data_tests:
+          - unique_combination:
+              arguments:
+                columns: [city, ts]
+      - name: weather_hourly
+        description: ERA5 reanalysis (via Open-Meteo Historical Weather), one row per city per UTC hour.
+        columns:
+          - name: city
+            data_tests: [not_null]
+          - name: ts
+            data_tests: [not_null]
+        data_tests:
+          - unique_combination:
+              arguments:
+                columns: [city, ts]

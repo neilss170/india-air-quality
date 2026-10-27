@@ -1,0 +1,15 @@
+# Credentials come from the environment, so the same profile runs in Docker locally and in CI.
+india_air_quality:
+  target: prod
+  outputs:
+    prod:
+      type: bigquery
+      method: service-account
+      keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS') }}"
+      project: "{{ env_var('GCP_PROJECT') }}"
+      location: "{{ env_var('BQ_LOCATION', 'asia-south1') }}"
+      dataset: analytics
+      threads: 4
+      priority: interactive
+      job_execution_timeout_seconds: 300
+      job_retries: 1

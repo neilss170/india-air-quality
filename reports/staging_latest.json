@@ -1,0 +1,47 @@
+{
+  "stg_air_quality_hourly": {
+    "n_rows": 556200,
+    "cities": 15,
+    "first_utc": "2022-08-04 00:00:00+00:00",
+    "last_utc": "2026-10-26 23:00:00+00:00",
+    "first_date_ist": "2022-08-04",
+    "last_date_ist": "2026-10-27",
+    "dates_ist": 1546,
+    "city_days_full": 23160,
+    "city_days_partial": 30,
+    "partial_dates": [
+      "2026-10-27 (5 h)",
+      "2022-08-04 (19 h)"
+    ],
+    "nulls": {
+      "pm25_ugm3": 0,
+      "pm10_ugm3": 0,
+      "no2_ugm3": 0,
+      "o3_ugm3": 0,
+      "co_ugm3": 0,
+      "so2_ugm3": 0
+    }
+  },
+  "stg_weather_hourly": {
+    "n_rows": 556200,
+    "cities": 15,
+    "first_utc": "2022-08-04 00:00:00+00:00",
+    "last_utc": "2026-10-26 23:00:00+00:00",
+    "first_date_ist": "2022-08-04",
+    "last_date_ist": "2026-10-27",
+    "dates_ist": 1546,
+    "city_days_full": 23160,
+    "city_days_partial": 30,
+    "partial_dates": [
+      "2026-10-27 (5 h)",
+      "2022-08-04 (19 h)"
+    ],
+    "nulls": {
+      "temperature_c": 0,
+      "relative_humidity_pct": 0,
+      "precipitation_mm": 0,
+      "wind_speed_kmh": 0,
+      "wind_direction_deg": 0
+    }
+  }
+}

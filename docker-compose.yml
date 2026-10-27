@@ -7,3 +7,6 @@ services:
       - .:/app
     env_file:
       - .env   # GCP_PROJECT and BQ_LOCATION, see .env.example
+    environment:
+      DBT_PROJECT_DIR: /app/dbt
+      DBT_PROFILES_DIR: /app/dbt

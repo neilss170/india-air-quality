@@ -1,0 +1,23 @@
+name: india_air_quality
+version: "1.0.0"
+config-version: 2
+profile: india_air_quality
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: target
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # CAMS history starts on 4 Aug 2022; the raw tables hold 1-3 Aug as empty hours (1,080 rows, all null).
+  first_aq_hour_utc: "2022-08-04 00:00:00 UTC"
+
+# The BigQuery sandbox rejects DML (MERGE/INSERT/DELETE), so nothing here is incremental:
+# views and CREATE OR REPLACE TABLE only. Rebuilt tables also restart the sandbox's 60-day table expiry.
+models:
+  india_air_quality:
+    staging:
+      +schema: staging
+      +materialized: view
