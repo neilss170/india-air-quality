@@ -1,0 +1,29 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # dbt parse renders the profile but never connects, so placeholders are enough
+      GCP_PROJECT: ci-placeholder
+      BQ_LOCATION: asia-south1
+      GOOGLE_APPLICATION_CREDENTIALS: /dev/null
+      DBT_PROJECT_DIR: dbt
+      DBT_PROFILES_DIR: dbt
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Loader unit tests
+        run: python -m pytest -q
+      - name: dbt parse
+        run: dbt parse

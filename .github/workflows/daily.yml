@@ -1,0 +1,91 @@
+name: daily
+
+# Load the last 10 days (whole months are replaced), rebuild and test the dbt models, publish the site.
+on:
+  schedule:
+    - cron: "30 2 * * *"   # 02:30 UTC = 08:00 IST, after yesterday's UTC hours are available
+  workflow_dispatch:
+
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  GCP_PROJECT: ${{ vars.GCP_PROJECT }}
+  BQ_LOCATION: ${{ vars.BQ_LOCATION }}
+  GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/secrets/gcp-key.json
+  DBT_PROJECT_DIR: dbt
+  DBT_PROFILES_DIR: dbt
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: Write service-account key
+        env:
+          KEY: ${{ secrets.GCP_SA_KEY }}
+        run: printf '%s' "$KEY" > "$GOOGLE_APPLICATION_CREDENTIALS"
+
+      - name: Load last 10 days
+        run: python -m loader.main --days 10
+
+      - name: Source freshness
+        run: dbt source freshness
+
+      - name: dbt build (models + tests)
+        run: dbt build
+
+      - name: Keep dbt results
+        if: always()
+        run: cp dbt/target/run_results.json reports/dbt_build_results.json || true
+
+      - name: dbt docs
+        run: dbt docs generate --static
+
+      - name: Assemble site
+        run: |
+          mkdir -p site/dbt
+          cp docs/index.html docs/.nojekyll site/
+          cp dbt/target/static_index.html site/dbt/index.html
+
+      - name: Run summary
+        if: always()
+        run: python scripts/run_summary.py >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reports
+          path: reports/
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+      - name: Remove key
+        if: always()
+        run: rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
+
+  deploy:
+    needs: pipeline
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
