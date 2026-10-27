@@ -2,7 +2,7 @@ version: 2
 
 seeds:
   - name: cities
-    description: The 15 cities the loader requests (copy of config/cities.csv; city centre coordinates).
+    description: The 15 cities; the loader requests these coordinates (city centres), and dim_city is built from it.
     config:
       column_types: {latitude: float64, longitude: float64, coastal: bool}
     columns:

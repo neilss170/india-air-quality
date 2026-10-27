@@ -1,11 +1,10 @@
-"""Load hourly air quality and weather for every city in config/cities.csv into BigQuery `raw`.
+"""Load hourly air quality and weather for every city in dbt/seeds/cities.csv into BigQuery `raw`.
 
     python -m loader.main --start 2022-08-01 --end 2026-10-26   # backfill
     python -m loader.main --days 10                              # daily run: the last 10 days, up to yesterday
 
 Loads replace whole months, so --start is rounded down to the 1st of its month. The daily run reloads
-the trailing days because the weather archive lags by about five days: those hours arrive as nulls first
-and are filled by a later run. A JSON report of what was loaded goes to reports/.
+the trailing days so that late or revised hours are picked up. A JSON report goes to reports/load_latest.json.
 """
 
 from __future__ import annotations
@@ -84,7 +83,7 @@ def main() -> None:
     args = parser.parse_args()
 
     start, end = date_range(args, dt.datetime.now(dt.timezone.utc).date())
-    cities = pd.read_csv(ROOT / "config" / "cities.csv")
+    cities = pd.read_csv(ROOT / "dbt" / "seeds" / "cities.csv")
     client = bigquery.Client(project=os.environ["GCP_PROJECT"], location=os.environ.get("BQ_LOCATION", "asia-south1"))
     report = run(start, end, cities, client, args.dataset)
 

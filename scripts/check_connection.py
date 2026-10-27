@@ -1,4 +1,4 @@
-"""M1 check: can we reach BigQuery with the service-account key, and is the `raw` dataset there?
+"""Setup check: can we reach BigQuery with the service-account key, and is the `raw` dataset there?
 
 Run: docker compose run --rm app python scripts/check_connection.py
 """

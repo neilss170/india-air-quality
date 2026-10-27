@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 parser = argparse.ArgumentParser()
 parser.add_argument("--month", type=int, required=True, help="YYYYMM")
 month = parser.parse_args().month
-cities = len(pd.read_csv(ROOT / "config" / "cities.csv"))
+cities = len(pd.read_csv(ROOT / "dbt" / "seeds" / "cities.csv"))
 expected = cities * calendar.monthrange(month // 100, month % 100)[1] * 24
 
 c = bigquery.Client(project=os.environ["GCP_PROJECT"], location=os.environ.get("BQ_LOCATION"))

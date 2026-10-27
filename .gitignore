@@ -18,3 +18,7 @@ logs/
 
 # dashboard data: exported by the daily workflow
 docs/data/
+
+# rewritten by every run
+reports/load_latest.json
+reports/dbt_build_results.json
