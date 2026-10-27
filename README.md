@@ -14,7 +14,7 @@ tests → dashboard, scheduled with GitHub Actions and orchestrated with Airflow
 | M3 | dbt staging models, source freshness | done |
 | M4 | dbt core models: star schema, Indian AQI (CPCB) | done |
 | M5 | dbt tests and docs | done |
-| M6 | Daily schedule on GitHub Actions | |
+| M6 | Daily schedule on GitHub Actions | done |
 | M7 | Airflow DAG with backfills | |
 | M8 | Dashboard | |
 | M9 | Results and limits | |
@@ -152,6 +152,29 @@ column descriptions, tests and the lineage graph (`dbt docs generate --static`, 
 docker compose run --rm app dbt build
 docker compose run --rm app dbt docs generate --static && cp dbt/target/static_index.html docs/dbt/index.html
 ```
+
+## Daily schedule (M6)
+
+Two GitHub Actions workflows:
+
+- [`daily.yml`](.github/workflows/daily.yml), every day at 02:30 UTC (08:00 IST) and on demand:
+  loader `--days 10` → `dbt source freshness` → `dbt build` → `dbt docs generate` → deploy the site to GitHub Pages.
+  The loader and dbt reports are kept as a run artifact, and a summary (rows per table, dbt pass/warn/fail) is
+  written to the run page. Any failed test stops the run before anything is published.
+- [`ci.yml`](.github/workflows/ci.yml), on every push and pull request: the loader's unit tests and `dbt parse`.
+  It needs no credentials.
+
+The service-account key is a repository secret (`GCP_SA_KEY`), written to disk only for the length of the run and
+deleted at the end; the project ID and location are repository variables.
+
+Measured on the first run (27 Oct 2026, started by hand): the job took 3 min 14 s plus 9 s to deploy. The loader
+replaced October 2026 in both tables (9,360 rows each, 15 cities × 624 hours, 0 empty cells) in 46 s, and the raw
+tables stayed at 557,280 rows, so the daily reload adds no duplicates. `dbt build`: 80 pass, 2 warn (the known negative
+model values), 0 fail, in 77 s. CI took 47 s.
+
+**Limits.** GitHub may start scheduled runs late when it is busy, and it turns off scheduled workflows in a public
+repository after 60 days without activity. The BigQuery sandbox also expires tables 60 days after they are created,
+so if the schedule stops for 60 days the `raw` tables expire and need a fresh backfill (`--start 2022-08-01`).
 
 ## Data
 
