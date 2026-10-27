@@ -9,7 +9,7 @@ tests → dashboard, scheduled with GitHub Actions and orchestrated with Airflow
 
 | # | Milestone | Status |
 |---|---|---|
-| M1 | Setup: BigQuery sandbox, service account, Docker | in progress |
+| M1 | Setup: BigQuery sandbox, service account, Docker | done |
 | M2 | Loader: hourly PM2.5 / PM10 / NO₂ / O₃ + weather, backfill from July 2022, incremental | |
 | M3 | dbt staging models, source freshness | |
 | M4 | dbt core models: star schema, Indian AQI (CPCB) | |
