@@ -13,7 +13,7 @@ tests → dashboard, scheduled with GitHub Actions and orchestrated with Airflow
 | M2 | Loader: hourly pollutants + weather, backfill from August 2022, idempotent monthly loads | done |
 | M3 | dbt staging models, source freshness | done |
 | M4 | dbt core models: star schema, Indian AQI (CPCB) | done |
-| M5 | dbt tests and docs | |
+| M5 | dbt tests and docs | done |
 | M6 | Daily schedule on GitHub Actions | |
 | M7 | Airflow DAG with backfills | |
 | M8 | Dashboard | |
@@ -119,6 +119,33 @@ city-days, the full AQI is Severe on 127 days and the PM-only index is also Seve
 
 ```bash
 docker compose run --rm app python scripts/marts_report.py
+```
+
+## Tests and docs (M5)
+
+`dbt build` runs 72 data tests and 1 unit test: 80 pass, 2 warn by design, 0 fail (43 s for the whole build).
+
+| Kind | What it checks |
+|---|---|
+| Keys | `unique`/`not_null` on dimensions; custom `unique_combination` on (city, hour) and (city, day) |
+| Relationships | every fact row's city is in `dim_city` and its IST date in `dim_date` |
+| Accepted values | AQI category, dominant pollutant, region, season; `hours` = 24 and 6 pollutants indexed on every day |
+| Value ranges | custom `accepted_range`: pollutants ≥ 0 with physical upper limits, humidity 0-100, AQI and sub-indices 0-500 |
+| Completeness | custom `complete_hours_per_day`: every city has exactly 24 hours on every interior IST day; a singular test checks `fct_city_daily` has every city × day |
+| Recency | warns if a city's newest hour is over 72 h old (source freshness covers the loader's run time) |
+| Unit test | `fct_city_daily` on fixed inputs with hand-computed answers: band interpolation (PM2.5 45 → 75), Severe (300 → 438), the 500 cap, a value on a breakpoint, alternating hours averaged, a 23-hour day excluded. Changing one expected value to a wrong number makes it fail. |
+
+**The 2 warnings are real data.** The model returned 54 negative hourly concentrations (53 ozone, down to
+-7 µg/m³; 1 NO₂), all in August and September 2022. Raw keeps them and a warn-level test counts them on every run;
+staging floors them at 0. The same checks found that the 122 hours of ozone above 500 µg/m³ all fall on Mumbai
+(peak 930 on 13 March 2023), which is why Mumbai's full AQI is high while its PM-only index is not.
+
+**Docs:** [neilss170.github.io/india-air-quality/dbt](https://neilss170.github.io/india-air-quality/dbt/): model and
+column descriptions, tests and the lineage graph (`dbt docs generate --static`, one HTML file in `docs/dbt/`).
+
+```bash
+docker compose run --rm app dbt build
+docker compose run --rm app dbt docs generate --static && cp dbt/target/static_index.html docs/dbt/index.html
 ```
 
 ## Data

@@ -20,18 +20,48 @@ models:
         description: 0-23, IST.
       - name: pm25_ugm3
         description: PM2.5, µg/m³.
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 2000
       - name: pm10_ugm3
         description: PM10, µg/m³.
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 5000
       - name: no2_ugm3
         description: Nitrogen dioxide, µg/m³.
+        data_tests:
+          - accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 2000
       - name: o3_ugm3
         description: Ozone, µg/m³.
+        data_tests:
+          - accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 2000
       - name: co_ugm3
         description: Carbon monoxide, µg/m³ (CPCB uses mg/m³; divide by 1000).
+        data_tests:
+          - accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 100000
       - name: so2_ugm3
         description: Sulphur dioxide, µg/m³.
+        data_tests:
+          - accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 5000
       - name: grid_latitude
         description: Model grid cell the API answered from.
       - name: grid_longitude
@@ -39,6 +69,10 @@ models:
       - unique_combination:
           arguments:
             columns: [city, measured_at_utc]
+      - complete_hours_per_day:
+          arguments:
+            group_column: city
+            date_column: date_ist
 
   - name: stg_weather_hourly
     description: Hourly weather per city (ERA5 reanalysis), same hours as stg_air_quality_hourly.
@@ -49,15 +83,44 @@ models:
         data_tests: [not_null]
       - name: temperature_c
         description: Air temperature at 2 m, °C.
+        data_tests:
+          - accepted_range:
+              arguments:
+                min_value: -30
+                max_value: 60
       - name: relative_humidity_pct
         description: Relative humidity at 2 m, %.
+        data_tests:
+          - accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 100
       - name: precipitation_mm
         description: Precipitation in the hour, mm.
+        data_tests:
+          - accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 300
       - name: wind_speed_kmh
         description: Wind speed at 10 m, km/h.
+        data_tests:
+          - accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 300
       - name: wind_direction_deg
         description: Wind direction at 10 m, degrees (meteorological, direction wind comes from).
+        data_tests:
+          - accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 360
     data_tests:
       - unique_combination:
           arguments:
             columns: [city, measured_at_utc]
+      - complete_hours_per_day:
+          arguments:
+            group_column: city
+            date_column: date_ist

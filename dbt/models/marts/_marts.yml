@@ -53,6 +53,10 @@ models:
       - unique_combination:
           arguments:
             columns: [city, measured_at_utc]
+      - complete_hours_per_day:
+          arguments:
+            group_column: city
+            date_column: date_ist
 
   - name: fct_city_daily
     description: >
@@ -75,7 +79,26 @@ models:
                 field: date_day
       - name: aqi
         description: Highest pollutant sub-index, rounded; 0-500.
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - accepted_range:
+              arguments: {min_value: 0, max_value: 500}
+      - name: pm25_sub_index
+        data_tests:
+          - accepted_range:
+              arguments: {min_value: 0, max_value: 500}
+      - name: pm10_sub_index
+        data_tests:
+          - accepted_range:
+              arguments: {min_value: 0, max_value: 500}
+      - name: o3_sub_index
+        data_tests:
+          - accepted_range:
+              arguments: {min_value: 0, max_value: 500}
+      - name: co_sub_index
+        data_tests:
+          - accepted_range:
+              arguments: {min_value: 0, max_value: 500}
       - name: aqi_category
         data_tests:
           - not_null
@@ -93,7 +116,10 @@ models:
         description: >
           Particulate-only index: the higher of the PM2.5 and PM10 sub-indices. Not a CPCB figure; kept because
           modelled ozone sets the full AQI on most days.
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - accepted_range:
+              arguments: {min_value: 0, max_value: 500}
       - name: aqi_pm_category
         data_tests:
           - accepted_values:
@@ -101,8 +127,18 @@ models:
                 values: [Good, Satisfactory, Moderate, Poor, Very Poor, Severe]
       - name: pollutants_indexed
         description: Sub-indices computed for the day; 6 when every pollutant is present.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [6]
+                quote: false
       - name: hours
         description: Hours in the day; always 24 (partial days are excluded).
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [24]
+                quote: false
     data_tests:
       - unique_combination:
           arguments:

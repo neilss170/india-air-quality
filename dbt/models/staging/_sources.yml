@@ -21,6 +21,49 @@ sources:
           - name: ts
             description: Start of the hour, UTC.
             data_tests: [not_null]
+          - name: pm2_5
+            description: Negative model values are kept here and floored at 0 in staging.
+            data_tests:
+              - accepted_range:
+                  arguments:
+                    min_value: 0
+                  config:
+                    severity: warn
+          - name: pm10
+            data_tests:
+              - accepted_range:
+                  arguments:
+                    min_value: 0
+                  config:
+                    severity: warn
+          - name: nitrogen_dioxide
+            data_tests:
+              - accepted_range:
+                  arguments:
+                    min_value: 0
+                  config:
+                    severity: warn
+          - name: ozone
+            data_tests:
+              - accepted_range:
+                  arguments:
+                    min_value: 0
+                  config:
+                    severity: warn
+          - name: carbon_monoxide
+            data_tests:
+              - accepted_range:
+                  arguments:
+                    min_value: 0
+                  config:
+                    severity: warn
+          - name: sulphur_dioxide
+            data_tests:
+              - accepted_range:
+                  arguments:
+                    min_value: 0
+                  config:
+                    severity: warn
         data_tests:
           - unique_combination:
               arguments:

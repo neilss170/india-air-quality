@@ -1,0 +1,49 @@
+version: 2
+
+# Fixed inputs with hand-computed answers, so the AQI logic is checked without the warehouse data.
+# Breakpoints are CPCB's PM2.5 and O3 bands in the continuous form int_aqi_bands produces.
+unit_tests:
+  - name: test_cpcb_aqi_interpolation
+    model: fct_city_daily
+    given:
+      - input: ref('int_aqi_bands')
+        format: sql
+        rows: |
+          select * from unnest([
+            struct('pm25' as pollutant, 'Good' as category, '24h' as averaging, 'ug/m3' as unit,
+                   0.0 as band_conc_lo, 30.0 as band_conc_hi, 0 as band_aqi_lo, 50 as band_aqi_hi, false as is_top_band),
+            ('pm25', 'Satisfactory', '24h', 'ug/m3', 30.0, 60.0, 50, 100, false),
+            ('pm25', 'Moderate', '24h', 'ug/m3', 60.0, 90.0, 100, 200, false),
+            ('pm25', 'Poor', '24h', 'ug/m3', 90.0, 120.0, 200, 300, false),
+            ('pm25', 'Very Poor', '24h', 'ug/m3', 120.0, 250.0, 300, 400, false),
+            ('pm25', 'Severe', '24h', 'ug/m3', 250.0, 380.0, 400, 500, true),
+            ('o3', 'Good', '8h', 'ug/m3', 0.0, 50.0, 0, 50, false),
+            ('o3', 'Satisfactory', '8h', 'ug/m3', 50.0, 100.0, 50, 100, false),
+            ('o3', 'Moderate', '8h', 'ug/m3', 100.0, 168.0, 100, 200, false)
+          ])
+      - input: ref('fct_air_quality_hourly')
+        format: sql
+        # 24 hours per city-day; other pollutants null, so only PM2.5 and O3 are indexed.
+        # Mixed: PM2.5 mean 45 (hours alternate 40/50) -> 50 + 50*15/30 = 75; O3 8h max 80 -> 50 + 50*30/50 = 80.
+        # Severe: PM2.5 300 -> 400 + 100*50/130 = 438.46 -> 438.  Capped: PM2.5 1000 -> 500.
+        # Edge: PM2.5 exactly 30 -> 50 (Good); O3 8h max 100 sits at the top of Satisfactory -> 100.
+        # Short: only 23 hours -> excluded.
+        rows: |
+          select city, date '2024-11-01' as date_ist, pm25 + if(mod(h, 2) = 0, delta, -delta) as pm25_ugm3,
+                 cast(null as float64) as pm10_ugm3, cast(null as float64) as no2_ugm3,
+                 cast(null as float64) as so2_ugm3, o3 as o3_8h_ugm3, cast(null as float64) as co_8h_ugm3,
+                 20.0 as temperature_c, 50.0 as relative_humidity_pct, 0.0 as precipitation_mm,
+                 5.0 as wind_speed_kmh
+          from unnest([
+            struct('Mixed' as city, 45.0 as pm25, 5.0 as delta, 80.0 as o3, 24 as hours),
+            ('Severe', 300.0, 0.0, 10.0, 24),
+            ('Capped', 1000.0, 0.0, 10.0, 24),
+            ('Edge', 30.0, 0.0, 100.0, 24),
+            ('Short', 45.0, 0.0, 10.0, 23)
+          ]), unnest(generate_array(1, hours)) as h
+    expect:
+      rows:
+        - {city: Mixed, aqi: 80, aqi_category: Satisfactory, dominant_pollutant: o3, aqi_pm: 75, hours: 24}
+        - {city: Severe, aqi: 438, aqi_category: Severe, dominant_pollutant: pm25, aqi_pm: 438, hours: 24}
+        - {city: Capped, aqi: 500, aqi_category: Severe, dominant_pollutant: pm25, aqi_pm: 500, hours: 24}
+        - {city: Edge, aqi: 100, aqi_category: Satisfactory, dominant_pollutant: o3, aqi_pm: 50, hours: 24}

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>India Air Quality Warehouse</title>
+<style>
+  :root { --bg: #f6f7fb; --fg: #1d2333; --muted: #5b6478; --link: #2554c7; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #11141c; --fg: #e7eaf2; --muted: #9aa3b8; --link: #8fb0ff; } }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, sans-serif; }
+  main { max-width: 640px; margin: 0 auto; padding: 48px 16px; }
+  p { color: var(--muted); }
+  a { color: var(--link); }
+</style>
+</head>
+<body>
+<main>
+  <h1>India Air Quality Warehouse</h1>
+  <p>Daily ELT pipeline: Open-Meteo air quality and weather for 15 Indian cities, loaded to BigQuery and modelled
+     with dbt. The dashboard will be published here.</p>
+  <ul>
+    <li><a href="dbt/">dbt documentation and lineage</a></li>
+    <li><a href="https://github.com/neilss170/india-air-quality">Source code</a></li>
+  </ul>
+</main>
+</body>
+</html>
