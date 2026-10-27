@@ -10,3 +10,23 @@ services:
     environment:
       DBT_PROJECT_DIR: /app/dbt
       DBT_PROFILES_DIR: /app/dbt
+
+  # Local Airflow for orchestration and backfills (only with --profile airflow). UI on http://localhost:8080
+  airflow:
+    profiles: [airflow]
+    build: orchestration
+    image: india-air-quality-airflow:latest
+    working_dir: /app
+    volumes:
+      - .:/app
+      - airflow-home:/opt/airflow-home   # metadata DB and logs survive restarts
+    env_file:
+      - .env
+    environment:
+      DBT_PROJECT_DIR: /app/dbt
+      DBT_PROFILES_DIR: /app/dbt
+    ports:
+      - "8080:8080"
+
+volumes:
+  airflow-home:

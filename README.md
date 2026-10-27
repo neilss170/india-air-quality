@@ -15,7 +15,7 @@ tests → dashboard, scheduled with GitHub Actions and orchestrated with Airflow
 | M4 | dbt core models: star schema, Indian AQI (CPCB) | done |
 | M5 | dbt tests and docs | done |
 | M6 | Daily schedule on GitHub Actions | done |
-| M7 | Airflow DAG with backfills | |
+| M7 | Airflow DAG with backfills | done |
 | M8 | Dashboard | |
 | M9 | Results and limits | |
 
@@ -146,11 +146,11 @@ last bit decided the rounding. Sub-indices are now rounded to 6 decimals before 
 then gave identical reports, and the independent check stayed at 200/200.
 
 **Docs:** [neilss170.github.io/india-air-quality/dbt](https://neilss170.github.io/india-air-quality/dbt/): model and
-column descriptions, tests and the lineage graph (`dbt docs generate --static`, one HTML file in `docs/dbt/`).
+column descriptions, tests and the lineage graph (`dbt docs generate --static`, built and deployed by the daily workflow).
 
 ```bash
 docker compose run --rm app dbt build
-docker compose run --rm app dbt docs generate --static && cp dbt/target/static_index.html docs/dbt/index.html
+docker compose run --rm app dbt docs generate --static   # writes dbt/target/static_index.html
 ```
 
 ## Daily schedule (M6)
@@ -175,6 +175,46 @@ model values), 0 fail, in 77 s. CI took 47 s.
 **Limits.** GitHub may start scheduled runs late when it is busy, and it turns off scheduled workflows in a public
 repository after 60 days without activity. The BigQuery sandbox also expires tables 60 days after they are created,
 so if the schedule stops for 60 days the `raw` tables expire and need a fresh backfill (`--start 2022-08-01`).
+
+## Airflow for backfills (M7)
+
+GitHub Actions is the always-on scheduler. Airflow runs locally in Docker for orchestration and backfills: free,
+always-on Airflow hosting does not exist, and the daily job does not need it.
+[`orchestration/dags/india_air_quality.py`](orchestration/dags/india_air_quality.py) is the same pipeline with one
+run per calendar month:
+
+```
+load_month -> check_month -> source_freshness -> dbt_build
+```
+
+`check_month` ([`scripts/check_month.py`](scripts/check_month.py)) fails the run unless the month holds exactly one
+row per city per hour in both raw tables. Airflow 3.3.2 is installed in its own virtualenv on top of the pipeline
+image, so its dependency pins never touch dbt's; the image adds about 350 MB to the 1.4 GB pipeline image.
+
+```bash
+docker compose build app && docker compose --profile airflow up -d airflow      # UI on localhost:8080
+docker compose --profile airflow exec airflow airflow dags unpause india_air_quality_monthly
+docker compose --profile airflow exec airflow airflow backfill create     --dag-id india_air_quality_monthly --from-date 2024-11-01 --to-date 2024-11-01
+```
+
+**Backfill of November 2024 (measured).** One run, 93 s: load 30 s, check 3 s, freshness 9 s, `dbt build` 48 s
+(80 pass, 2 warn, 0 fail). The month's `loaded_at` moved from 10:45 to 12:12 UTC, so it was really rewritten; it
+still holds 10,800 rows per table with 0 duplicates, and the raw tables still hold 557,280 rows each. December 2024
+to February 2025 were then backfilled the same way, all successful.
+
+**What went wrong first, and the fixes.**
+- Airflow 3 reads a plain `@monthly` schedule as a trigger with a zero-length data interval. The first runs asked
+  the loader for 1 Nov to 31 Oct; the loader's own check rejected the range, so nothing was written. The DAG now
+  uses `CronDataIntervalTimetable`, which gives each run its whole month. Runs created before the fix keep their
+  old interval even when re-run, so they were deleted from Airflow's database and created again.
+- A paused DAG's backfill runs stay queued. The DAG has to be unpaused, which also schedules the latest complete
+  month (September 2026, a harmless reload); it was paused again afterwards.
+- The first backfill and that scheduled run ran at the same time, including two `dbt build`s against the same
+  tables. Both passed, but that was luck. The dbt tasks now go through a one-slot pool. In two later tests Airflow
+  started the second run only after the first had finished, so the pool has not yet been exercised by a real
+  overlap; it is a safeguard.
+- A manual trigger ignores `--logical-date` for the data interval: a trigger dated 2025-03-01 loaded September
+  2026, the latest complete month. Specific months go through `airflow backfill create`.
 
 ## Data
 

@@ -1,29 +1,29 @@
 {
-  "start": "2022-08-01",
-  "end": "2026-10-26",
+  "start": "2025-02-01",
+  "end": "2025-02-28",
   "cities": 15,
   "tables": {
     "air_quality_hourly": {
-      "rows": 557280,
-      "months_replaced": 51,
-      "api_requests": 75,
+      "rows": 10080,
+      "months_replaced": 1,
+      "api_requests": 15,
       "null_cells": {
-        "pm2_5": 1080,
-        "pm10": 1080,
-        "nitrogen_dioxide": 1080,
-        "ozone": 1080,
-        "carbon_monoxide": 1080,
-        "sulphur_dioxide": 1080
+        "pm2_5": 0,
+        "pm10": 0,
+        "nitrogen_dioxide": 0,
+        "ozone": 0,
+        "carbon_monoxide": 0,
+        "sulphur_dioxide": 0
       },
-      "first_ts": "2022-08-01 00:00:00+00:00",
-      "last_ts": "2026-10-26 23:00:00+00:00",
-      "table_expires": "2026-12-25 10:47:30.870000+00:00",
-      "seconds": 268.8
+      "first_ts": "2025-02-01 00:00:00+00:00",
+      "last_ts": "2025-02-28 23:00:00+00:00",
+      "table_expires": "2026-12-25 12:23:10.553000+00:00",
+      "seconds": 14.8
     },
     "weather_hourly": {
-      "rows": 557280,
-      "months_replaced": 51,
-      "api_requests": 75,
+      "rows": 10080,
+      "months_replaced": 1,
+      "api_requests": 15,
       "null_cells": {
         "temperature_2m": 0,
         "relative_humidity_2m": 0,
@@ -31,10 +31,10 @@
         "wind_speed_10m": 0,
         "wind_direction_10m": 0
       },
-      "first_ts": "2022-08-01 00:00:00+00:00",
-      "last_ts": "2026-10-26 23:00:00+00:00",
-      "table_expires": "2026-12-25 10:51:13.349000+00:00",
-      "seconds": 222.5
+      "first_ts": "2025-02-01 00:00:00+00:00",
+      "last_ts": "2025-02-28 23:00:00+00:00",
+      "table_expires": "2026-12-25 12:23:24.580000+00:00",
+      "seconds": 14.0
     }
   }
 }
