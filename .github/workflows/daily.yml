@@ -53,10 +53,11 @@ jobs:
       - name: dbt docs
         run: dbt docs generate --static
 
-      - name: Assemble site
+      - name: Assemble site (dashboard + data + dbt docs)
         run: |
           mkdir -p site/dbt
-          cp docs/index.html docs/.nojekyll site/
+          cp -r docs/. site/
+          python scripts/export_dashboard.py --out site/data/dashboard.json
           cp dbt/target/static_index.html site/dbt/index.html
 
       - name: Run summary

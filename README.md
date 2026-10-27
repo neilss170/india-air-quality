@@ -16,7 +16,7 @@ tests → dashboard, scheduled with GitHub Actions and orchestrated with Airflow
 | M5 | dbt tests and docs | done |
 | M6 | Daily schedule on GitHub Actions | done |
 | M7 | Airflow DAG with backfills | done |
-| M8 | Dashboard | |
+| M8 | Dashboard | done |
 | M9 | Results and limits | |
 
 ## Loader (M2)
@@ -217,6 +217,32 @@ to February 2025 were then backfilled the same way, all successful.
   overlap; it is a safeguard.
 - A manual trigger ignores `--logical-date` for the data interval: a trigger dated 2025-03-01 loaded September
   2026, the latest complete month. Specific months go through `airflow backfill create`.
+
+## Dashboard (M8)
+
+**[neilss170.github.io/india-air-quality](https://neilss170.github.io/india-air-quality/)**: a single static page in
+vanilla JavaScript with hand-written SVG charts, glass cards over drifting gradient blobs, light and dark themes,
+count-up numbers and growing bars and lines (turned off for reduced-motion users, or with `?motion=off`). Every chart
+has a hover tooltip and a table view. The daily workflow runs
+[`scripts/export_dashboard.py`](scripts/export_dashboard.py) after `dbt build`, which writes one JSON file from the
+marts (city averages included, so the page does no statistics of its own) and deploys it with the page. A freshness
+pill shows how old the newest hour is (green within 48 h).
+
+What the data shows (15 cities, 5 Aug 2022 - 26 Oct 2026, modelled values):
+
+- **Rain.** Mean daily PM2.5 is 53.0 µg/m³ on dry days and 18.7 on days with 30 mm+ of
+  rain. Rain falls mostly in the monsoon, when PM is low anyway; within the monsoon alone it is still
+  36.1 vs 18.4.
+- **Diwali does not show a clear spike in this data.** Averaged over the 15 cities, Diwali-day PM2.5 was above the
+  week before in 2 of 4 years, and in Delhi in 1 of 4 (2023: 90 the week before,
+  36 on Diwali). A likely reason is that a global model driven by emission inventories does not capture
+  a one-night fireworks spike; ground stations would be the right source for this question.
+- **Daily cycle.** PM2.5 peaks between 19:00 and 23:00 IST in 12 of 15 cities; the exceptions are Pune
+  (07:00), Jaipur (08:00) and Mumbai (14:00). Ozone peaks around 13:00.
+- **Seasons and cities.** The northern plains (Delhi, Kanpur, Lucknow, Patna) and Kolkata are worst on the PM index.
+  Kanpur, Lucknow, Patna and Kolkata have their three worst months in November-January; Delhi's are January, May
+  and November. On the PM index Bengaluru, Chennai and Kochi are Good or Satisfactory on over 99% of days; Mumbai
+  on 78.7%.
 
 ## Data
 

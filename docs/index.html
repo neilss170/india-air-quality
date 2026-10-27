@@ -3,25 +3,138 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>India Air Quality Warehouse</title>
-<style>
-  :root { --bg: #f6f7fb; --fg: #1d2333; --muted: #5b6478; --link: #2554c7; }
-  @media (prefers-color-scheme: dark) { :root { --bg: #11141c; --fg: #e7eaf2; --muted: #9aa3b8; --link: #8fb0ff; } }
-  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, sans-serif; }
-  main { max-width: 640px; margin: 0 auto; padding: 48px 16px; }
-  p { color: var(--muted); }
-  a { color: var(--link); }
-</style>
+<title>India Air Quality</title>
+<meta name="description" content="Air quality and weather for 15 Indian cities since August 2022: a daily BigQuery + dbt pipeline.">
+<link rel="stylesheet" href="styles.css">
+<script>
+  // apply a saved theme before first paint
+  // ?theme=light|dark wins (handy for links and screenshots), then the saved choice, then the OS setting
+  try {
+    const q = new URLSearchParams(location.search).get("theme");
+    const t = q === "light" || q === "dark" ? q : localStorage.getItem("theme");
+    if (t) document.documentElement.dataset.theme = t;
+  } catch (e) {}
+</script>
 </head>
 <body>
+<div class="blobs" aria-hidden="true"><div class="blob a"></div><div class="blob b"></div><div class="blob c"></div></div>
 <main>
-  <h1>India Air Quality Warehouse</h1>
-  <p>Daily ELT pipeline: Open-Meteo air quality and weather for 15 Indian cities, loaded to BigQuery and modelled
-     with dbt. The dashboard will be published here.</p>
-  <ul>
-    <li><a href="dbt/">dbt documentation and lineage</a></li>
-    <li><a href="https://github.com/neilss170/india-air-quality">Source code</a></li>
-  </ul>
+  <header class="top glass reveal">
+    <div>
+      <h1>India Air Quality</h1>
+      <p>Hourly pollution and weather for 15 Indian cities since August 2022, loaded daily into BigQuery and modelled
+         with dbt. Every number below comes from the warehouse.</p>
+    </div>
+    <div class="top-right">
+      <span class="pill" id="freshness" role="status">Loading data…</span>
+      <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light and dark theme">Dark mode</button>
+    </div>
+  </header>
+
+  <section class="kpis" aria-label="Headline numbers">
+    <div class="kpi glass reveal"><div class="label">City-hours modelled</div><div class="value" data-count="hourly_rows">–</div><div class="sub" id="kpi-hours-sub"></div></div>
+    <div class="kpi glass reveal"><div class="label">Complete city-days</div><div class="value" data-count="city_days">–</div><div class="sub">24 IST hours each</div></div>
+    <div class="kpi glass reveal"><div class="label">City-days PM index "Poor" or worse</div><div class="value" data-count="pm_poor_or_worse_days">–</div><div class="sub" id="kpi-poor-sub"></div></div>
+    <div class="kpi glass reveal"><div class="label">Days where ozone sets the full AQI</div><div class="value" data-count="o3_share" data-suffix="%">–</div><div class="sub" id="kpi-o3-sub"></div></div>
+  </section>
+
+  <section class="note glass reveal">
+    <b>Two indices.</b> The <b>full AQI</b> applies CPCB's National AQI formula to all six modelled pollutants. Modelled
+    ozone sets it on most days, including in coastal cities, so the charts lead with the <b>PM index</b>: the same formula
+    on PM2.5 and PM10 only. Neither is the official CPCB figure, which comes from ground stations; these values are
+    CAMS model output on a grid.
+  </section>
+
+  <div class="grid">
+    <section class="card glass reveal" id="card-rank">
+      <div class="card-head">
+        <div><h2>Which cities have the worst air?</h2><p class="sub">Mean daily index, Aug 2022 to today</p></div>
+        <div class="controls"><div class="seg" role="group" aria-label="Index" data-ctl="rank-index">
+          <button class="chip" aria-pressed="true" data-v="aqi_pm">PM index</button><button class="chip" aria-pressed="false" data-v="aqi">Full AQI</button>
+        </div></div>
+      </div>
+      <div class="chart" id="chart-rank"></div>
+      <button class="btn table-toggle" data-table="rank">Show table</button><div id="table-rank"></div>
+    </section>
+
+    <section class="card glass reveal" id="card-cats">
+      <div class="card-head">
+        <div><h2>How often is the air bad?</h2><p class="sub">Share of days in each CPCB category, PM index</p></div>
+      </div>
+      <div class="legend" id="legend-cats"></div>
+      <div class="chart" id="chart-cats"></div>
+      <button class="btn table-toggle" data-table="cats">Show table</button><div id="table-cats"></div>
+    </section>
+
+    <section class="card glass wide reveal" id="card-time">
+      <div class="card-head">
+        <div><h2>Month by month</h2><p class="sub">Monthly mean of the daily index</p></div>
+        <div class="controls">
+          <select id="time-city" aria-label="City"></select>
+          <div class="seg" role="group" aria-label="Index" data-ctl="time-index">
+            <button class="chip" aria-pressed="true" data-v="aqi_pm">PM index</button><button class="chip" aria-pressed="false" data-v="aqi">Full AQI</button>
+          </div>
+        </div>
+      </div>
+      <div class="legend" id="legend-time"></div>
+      <div class="chart" id="chart-time"></div>
+      <button class="btn table-toggle" data-table="time">Show table</button><div id="table-time"></div>
+    </section>
+
+    <section class="card glass wide reveal" id="card-diwali">
+      <div class="card-head">
+        <div><h2>Does Diwali show up?</h2><p class="sub">Daily mean PM2.5 (µg/m³), 10 days either side of Diwali</p></div>
+        <div class="controls"><select id="diwali-city" aria-label="City"></select></div>
+      </div>
+      <p class="finding" id="finding-diwali"></p>
+      <div class="legend" id="legend-diwali"></div>
+      <div class="chart" id="chart-diwali"></div>
+      <button class="btn table-toggle" data-table="diwali">Show table</button><div id="table-diwali"></div>
+    </section>
+
+    <section class="card glass reveal" id="card-rain">
+      <div class="card-head">
+        <div><h2>Rain clears the air</h2><p class="sub">Mean PM2.5 by the day's rainfall, all city-days</p></div>
+        <div class="controls"><div class="seg" role="group" aria-label="Days included" data-ctl="rain-scope">
+          <button class="chip" aria-pressed="true" data-v="all">All days</button><button class="chip" aria-pressed="false" data-v="monsoon">Monsoon only</button>
+        </div></div>
+      </div>
+      <p class="finding" id="finding-rain"></p>
+      <div class="chart" id="chart-rain"></div>
+      <button class="btn table-toggle" data-table="rain">Show table</button><div id="table-rain"></div>
+    </section>
+
+    <section class="card glass reveal" id="card-hour">
+      <div class="card-head">
+        <div><h2>The daily cycle</h2><p class="sub">Mean concentration by hour of day (IST), µg/m³</p></div>
+        <div class="controls"><select id="hour-city" aria-label="City"></select></div>
+      </div>
+      <p class="finding" id="finding-hour"></p>
+      <div class="legend" id="legend-hour"></div>
+      <div class="chart" id="chart-hour"></div>
+      <button class="btn table-toggle" data-table="hour">Show table</button><div id="table-hour"></div>
+    </section>
+
+    <section class="card glass wide reveal" id="card-season">
+      <div class="card-head">
+        <div><h2>The seasons</h2><p class="sub">Mean PM index by calendar month, all years; the stronger the colour, the worse the air</p></div>
+      </div>
+      <div class="chart" id="chart-season"></div>
+      <button class="btn table-toggle" data-table="season">Show table</button><div id="table-season"></div>
+    </section>
+  </div>
+
+  <footer class="glass reveal">
+    <b>About the data.</b> Air quality: CAMS global model via the Open-Meteo Air Quality API; weather: ERA5 reanalysis
+    via Open-Meteo. Values are for the model grid cell nearest each city, not ground stations. AQI: CPCB National AQI
+    (2014) breakpoints; 24-hour means for PM and NO₂/SO₂, highest 8-hour mean for O₃ and CO; complete IST days only.
+    <ul>
+      <li><a href="dbt/">dbt documentation and lineage</a> · <a href="https://github.com/neilss170/india-air-quality">source code</a></li>
+      <li id="generated"></li>
+    </ul>
+  </footer>
 </main>
+<div class="tooltip" id="tooltip" role="tooltip"></div>
+<script src="app.js" defer></script>
 </body>
 </html>
