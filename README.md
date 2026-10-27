@@ -9,6 +9,48 @@ an Airflow DAG handles backfills.
 
 Every number in this README comes from a measured run; the reports are in [`reports/`](reports/).
 
+## Tour
+
+**1. Overview.** Freshness of the newest hour, headline numbers, and the two indices: the full CPCB AQI and the
+PM index the dashboard leads with. Cities are ranked by mean index; the category mix shows how often each city's air
+is Good through Severe.
+
+![Dashboard overview: headline numbers, city ranking and category mix](assets/screenshots/1-overview-light.png)
+
+**2. Over time, and Diwali (dark theme).** Monthly index for any city against the 15-city mean, and PM2.5 for the
+ten days either side of each Diwali in the data. The finding above the chart is generated from the data: Diwali-day
+PM2.5 was above the week before in 2 of 4 years.
+
+![Month-by-month index and the Diwali comparison, dark theme](assets/screenshots/2-trends-dark.png)
+
+**3. Rain and the daily cycle.** Mean PM2.5 by the day's rainfall (switchable to monsoon days only), and the
+average hour-by-hour profile of PM2.5 and ozone for any city.
+
+![Rain vs PM2.5 and the daily cycle of PM2.5 and ozone](assets/screenshots/3-rain-daily-cycle-light.png)
+
+**4. Seasons.** Mean PM index by calendar month for every city. Every chart has hover tooltips and a table view.
+
+![Season heatmap: mean PM index by city and month](assets/screenshots/4-seasons-dark.png)
+
+**5. On a phone.** The same page at 390 px wide: the cards stack and the charts redraw to the width.
+
+<img src="assets/screenshots/5-mobile-dark.png" alt="Dashboard on a 390 px wide phone screen" width="300">
+
+**6. dbt lineage.** Raw sources and seeds → staging views → marts, with the singular and unit tests attached
+(from the published dbt docs).
+
+![dbt lineage graph from raw sources to the marts and tests](assets/screenshots/6-dbt-lineage.png)
+
+**7. The daily workflow.** One run of `daily.yml`: the pipeline job (load, freshness, `dbt build`, docs, export)
+and the Pages deploy, with the reports kept as an artifact. This run was started by hand.
+
+![GitHub Actions run of the daily workflow](assets/screenshots/7-github-actions-run.png)
+
+**8. Airflow.** The monthly DAG (`load_month → check_month → source_freshness → dbt_build`) after the backfills:
+six runs, none failed.
+
+![Airflow DAG page with six successful runs](assets/screenshots/8-airflow-dag.png)
+
 ## Architecture
 
 ```
