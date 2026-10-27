@@ -51,7 +51,7 @@ def recompute(sample: pd.DataFrame, bp: pd.DataFrame) -> pd.DataFrame:
         conc = {"pm25": day.pm25_ugm3.mean(), "pm10": day.pm10_ugm3.mean(), "no2": day.no2_ugm3.mean(),
                 "so2": day.so2_ugm3.mean(), "o3": roll.o3_ugm3.max(), "co": roll.co_ugm3.max() / 1000}
         si = {p: sub_index(p, v, bp) for p, v in conc.items()}
-        out.append({"city": city, "date_ist": d, "aqi_py": math.floor(max(si.values()) + 0.5),  # half up, as BigQuery ROUND
+        out.append({"city": city, "date_ist": d, "aqi_py": math.floor(round(max(si.values()), 6) + 0.5),  # half up, as BigQuery ROUND
                     "dominant_py": max(si, key=lambda p: (si[p], [-ord(ch) for ch in p]))})
     return pd.DataFrame(out)
 

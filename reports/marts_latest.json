@@ -36,22 +36,22 @@
     {
       "city": "Delhi",
       "days": 1544,
-      "mean_aqi": 235.753,
+      "mean_aqi": 235.754,
       "median_aqi": 219.0,
       "max_aqi": 500,
       "share_poor_or_worse": 0.569,
-      "mean_aqi_pm": 182.455,
+      "mean_aqi_pm": 182.457,
       "share_pm_poor_or_worse": 0.361,
       "top_dominant": "o3"
     },
     {
       "city": "Patna",
       "days": 1544,
-      "mean_aqi": 200.188,
+      "mean_aqi": 200.189,
       "median_aqi": 189.0,
       "max_aqi": 385,
       "share_poor_or_worse": 0.417,
-      "mean_aqi_pm": 121.823,
+      "mean_aqi_pm": 121.826,
       "share_pm_poor_or_worse": 0.199,
       "top_dominant": "o3"
     },
@@ -62,7 +62,7 @@
       "median_aqi": 179.0,
       "max_aqi": 500,
       "share_poor_or_worse": 0.341,
-      "mean_aqi_pm": 137.003,
+      "mean_aqi_pm": 137.005,
       "share_pm_poor_or_worse": 0.227,
       "top_dominant": "o3"
     },
@@ -73,7 +73,7 @@
       "median_aqi": 176.0,
       "max_aqi": 481,
       "share_poor_or_worse": 0.317,
-      "mean_aqi_pm": 122.213,
+      "mean_aqi_pm": 122.214,
       "share_pm_poor_or_worse": 0.179,
       "top_dominant": "o3"
     },
@@ -84,7 +84,7 @@
       "median_aqi": 169.5,
       "max_aqi": 423,
       "share_poor_or_worse": 0.418,
-      "mean_aqi_pm": 79.76,
+      "mean_aqi_pm": 79.761,
       "share_pm_poor_or_worse": 0.063,
       "top_dominant": "o3"
     },
@@ -95,7 +95,7 @@
       "median_aqi": 170.0,
       "max_aqi": 397,
       "share_poor_or_worse": 0.39,
-      "mean_aqi_pm": 116.543,
+      "mean_aqi_pm": 116.546,
       "share_pm_poor_or_worse": 0.217,
       "top_dominant": "o3"
     },
@@ -106,7 +106,7 @@
       "median_aqi": 177.0,
       "max_aqi": 307,
       "share_poor_or_worse": 0.307,
-      "mean_aqi_pm": 77.147,
+      "mean_aqi_pm": 77.148,
       "share_pm_poor_or_worse": 0.021,
       "top_dominant": "o3"
     },
@@ -117,7 +117,7 @@
       "median_aqi": 149.0,
       "max_aqi": 500,
       "share_poor_or_worse": 0.071,
-      "mean_aqi_pm": 91.071,
+      "mean_aqi_pm": 91.073,
       "share_pm_poor_or_worse": 0.048,
       "top_dominant": "o3"
     },
@@ -128,7 +128,7 @@
       "median_aqi": 140.0,
       "max_aqi": 285,
       "share_poor_or_worse": 0.094,
-      "mean_aqi_pm": 48.264,
+      "mean_aqi_pm": 48.266,
       "share_pm_poor_or_worse": 0.001,
       "top_dominant": "o3"
     },
@@ -139,7 +139,7 @@
       "median_aqi": 141.0,
       "max_aqi": 302,
       "share_poor_or_worse": 0.089,
-      "mean_aqi_pm": 47.806,
+      "mean_aqi_pm": 47.81,
       "share_pm_poor_or_worse": 0.002,
       "top_dominant": "o3"
     },
@@ -150,7 +150,7 @@
       "median_aqi": 117.0,
       "max_aqi": 307,
       "share_poor_or_worse": 0.15,
-      "mean_aqi_pm": 41.042,
+      "mean_aqi_pm": 41.043,
       "share_pm_poor_or_worse": 0.0,
       "top_dominant": "o3"
     },
@@ -161,7 +161,7 @@
       "median_aqi": 121.0,
       "max_aqi": 301,
       "share_poor_or_worse": 0.026,
-      "mean_aqi_pm": 51.213,
+      "mean_aqi_pm": 51.218,
       "share_pm_poor_or_worse": 0.003,
       "top_dominant": "o3"
     },
@@ -183,7 +183,7 @@
       "median_aqi": 113.0,
       "max_aqi": 302,
       "share_poor_or_worse": 0.038,
-      "mean_aqi_pm": 38.619,
+      "mean_aqi_pm": 38.621,
       "share_pm_poor_or_worse": 0.0,
       "top_dominant": "o3"
     },
@@ -194,7 +194,7 @@
       "median_aqi": 105.0,
       "max_aqi": 301,
       "share_poor_or_worse": 0.048,
-      "mean_aqi_pm": 35.005,
+      "mean_aqi_pm": 35.007,
       "share_pm_poor_or_worse": 0.0,
       "top_dominant": "o3"
     }
@@ -209,56 +209,56 @@
     "reference.cities": {
       "type": "TABLE",
       "rows": 15,
-      "created": "2026-10-27 11:14:12.743000+00:00",
-      "expires": "2026-12-26 11:14:12.743000+00:00"
+      "created": "2026-10-27 11:21:28.991000+00:00",
+      "expires": "2026-12-26 11:21:28.991000+00:00"
     },
     "reference.cpcb_aqi_breakpoints": {
       "type": "TABLE",
       "rows": 36,
-      "created": "2026-10-27 11:14:12.096000+00:00",
-      "expires": "2026-12-26 11:14:12.096000+00:00"
+      "created": "2026-10-27 11:21:29.166000+00:00",
+      "expires": "2026-12-26 11:21:29.166000+00:00"
     },
     "reference.indian_festivals": {
       "type": "TABLE",
       "rows": 28,
-      "created": "2026-10-27 11:14:13.094000+00:00",
-      "expires": "2026-12-26 11:14:13.094000+00:00"
+      "created": "2026-10-27 11:21:28.986000+00:00",
+      "expires": "2026-12-26 11:21:28.986000+00:00"
     },
     "staging.stg_air_quality_hourly": {
       "type": "VIEW",
       "rows": 0,
-      "created": "2026-10-27 11:14:16.467000+00:00",
-      "expires": "2026-12-26 11:14:16.467000+00:00"
+      "created": "2026-10-27 11:21:34.586000+00:00",
+      "expires": "2026-12-26 11:21:34.586000+00:00"
     },
     "staging.stg_weather_hourly": {
       "type": "VIEW",
       "rows": 0,
-      "created": "2026-10-27 11:14:17.494000+00:00",
-      "expires": "2026-12-26 11:14:17.494000+00:00"
+      "created": "2026-10-27 11:21:34.659000+00:00",
+      "expires": "2026-12-26 11:21:34.659000+00:00"
     },
     "marts.dim_city": {
       "type": "TABLE",
       "rows": 15,
-      "created": "2026-10-27 11:14:24.878000+00:00",
-      "expires": "2026-12-26 11:14:24.878000+00:00"
+      "created": "2026-10-27 11:21:47.596000+00:00",
+      "expires": "2026-12-26 11:21:47.596000+00:00"
     },
     "marts.dim_date": {
       "type": "TABLE",
       "rows": 1546,
-      "created": "2026-10-27 11:14:24.069000+00:00",
-      "expires": "2026-12-26 11:14:24.069000+00:00"
+      "created": "2026-10-27 11:21:45.951000+00:00",
+      "expires": "2026-12-26 11:21:45.951000+00:00"
     },
     "marts.fct_air_quality_hourly": {
       "type": "TABLE",
       "rows": 556200,
-      "created": "2026-10-27 11:14:28.562000+00:00",
-      "expires": "2026-12-26 11:14:28.562000+00:00"
+      "created": "2026-10-27 11:21:49.598000+00:00",
+      "expires": "2026-12-26 11:21:49.598000+00:00"
     },
     "marts.fct_city_daily": {
       "type": "TABLE",
       "rows": 23160,
-      "created": "2026-10-27 11:16:44.112000+00:00",
-      "expires": "2026-12-26 11:16:44.112000+00:00"
+      "created": "2026-10-27 11:25:09.702000+00:00",
+      "expires": "2026-12-26 11:25:09.702000+00:00"
     }
   }
 }

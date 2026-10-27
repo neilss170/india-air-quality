@@ -41,8 +41,10 @@ sub_indices as (
         c.city,
         c.date_ist,
         c.pollutant,
-        least(500, b.band_aqi_lo + (b.band_aqi_hi - b.band_aqi_lo)
-            * (c.concentration - b.band_conc_lo) / (b.band_conc_hi - b.band_conc_lo)) as sub_index
+        -- rounded to 6 places: AVG's summation order varies between runs, and without this a sub-index of
+        -- exactly x.5 (common, as the inputs have one decimal) rounds up on some runs and down on others
+        round(least(500, b.band_aqi_lo + (b.band_aqi_hi - b.band_aqi_lo)
+            * (c.concentration - b.band_conc_lo) / (b.band_conc_hi - b.band_conc_lo)), 6) as sub_index
     from concentrations as c
     inner join {{ ref('int_aqi_bands') }} as b
         on b.pollutant = c.pollutant

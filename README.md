@@ -140,6 +140,11 @@ docker compose run --rm app python scripts/marts_report.py
 staging floors them at 0. The same checks found that the 122 hours of ozone above 500 µg/m³ all fall on Mumbai
 (peak 930 on 13 March 2023), which is why Mumbai's full AQI is high while its PM-only index is not.
 
+**Deterministic AQI.** Re-running the build changed a few daily AQIs by 1 point with no change in the data. BigQuery's
+`AVG` does not add floats in a fixed order, and with one-decimal inputs many sub-indices land on exactly x.5, so the
+last bit decided the rounding. Sub-indices are now rounded to 6 decimals before the AQI is rounded; two rebuilds
+then gave identical reports, and the independent check stayed at 200/200.
+
 **Docs:** [neilss170.github.io/india-air-quality/dbt](https://neilss170.github.io/india-air-quality/dbt/): model and
 column descriptions, tests and the lineage graph (`dbt docs generate --static`, one HTML file in `docs/dbt/`).
 
