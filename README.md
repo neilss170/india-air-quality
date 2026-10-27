@@ -3,14 +3,14 @@
 A daily ELT pipeline for air quality and weather in 15 Indian cities: Open-Meteo APIs → BigQuery → dbt models and
 tests → dashboard, scheduled with GitHub Actions and orchestrated with Airflow.
 
-**Status: in progress.** Every number in this README will come from a measured run.
+**Status: in progress.** Every number in this README comes from a measured run (`reports/`).
 
 ## Plan
 
 | # | Milestone | Status |
 |---|---|---|
 | M1 | Setup: BigQuery sandbox, service account, Docker | done |
-| M2 | Loader: hourly PM2.5 / PM10 / NO₂ / O₃ + weather, backfill from July 2022, incremental | |
+| M2 | Loader: hourly pollutants + weather, backfill from August 2022, idempotent monthly loads | done |
 | M3 | dbt staging models, source freshness | |
 | M4 | dbt core models: star schema, Indian AQI (CPCB) | |
 | M5 | dbt tests and docs | |
@@ -19,12 +19,37 @@ tests → dashboard, scheduled with GitHub Actions and orchestrated with Airflow
 | M8 | Dashboard | |
 | M9 | Results and limits | |
 
-## Cities
+## Loader (M2)
 
-15 cities across North, East, Northeast, West and South India: see [`config/cities.csv`](config/cities.csv).
+`loader/` pulls hourly data for every city in [`config/cities.csv`](config/cities.csv) from two APIs and loads it
+into BigQuery `raw`:
+
+| Table | Variables | Rows (backfill) | Empty hours |
+|---|---|---|---|
+| `raw.air_quality_hourly` | PM2.5, PM10, NO₂, O₃, CO, SO₂ | 557,280 | 1,080 (1–3 Aug 2022: the model's history starts on 4 Aug) |
+| `raw.weather_hourly` | temperature, humidity, precipitation, wind speed and direction | 557,280 | 0 |
+
+Backfill: 1 Aug 2022 – 26 Oct 2026, 15 cities × 37,152 hours, 150 API requests, about 8 minutes.
+
+**Idempotent without DML.** The free BigQuery sandbox rejects `DELETE`, `UPDATE` and `MERGE`, so the usual
+delete-then-insert or merge is unavailable. Instead the raw tables are integer-range partitioned on `month` (YYYYMM),
+and every load job overwrites whole partitions (`table$202411`, `WRITE_TRUNCATE`). Re-running any range rewrites
+exactly those months. Loading November 2024 twice gave 10,800 rows both times, and the backfill has 0 duplicate
+(city, hour) rows. Integer-range partitions also avoid the sandbox's 60-day expiry of time partitions, and each run
+pushes the table expiry forward 59 days.
+
+**Daily run.** `--days 10` reloads the current month up to yesterday, so late or revised hours are picked up by
+the next run.
+
+```bash
+docker compose run --rm app python -m loader.main --start 2022-08-01   # backfill to yesterday
+docker compose run --rm app python -m loader.main --days 10            # daily
+docker compose run --rm app python -m pytest
+```
 
 ## Data
 
-Air quality: [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api) (CAMS model data, hourly, from
-July 2022). Weather: [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api).
-These are modelled values on a grid, not ground-station readings.
+Air quality: [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api) (CAMS global model, hourly,
+from 4 August 2022). Weather: [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api)
+(ERA5 reanalysis). These are modelled values on a grid, not ground-station readings: the API answers from the nearest
+grid cell (Delhi's request at 28.6139, 77.2090 comes back as 28.6, 77.2), and both coordinates are stored.
