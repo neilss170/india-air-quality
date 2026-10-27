@@ -12,7 +12,7 @@ tests → dashboard, scheduled with GitHub Actions and orchestrated with Airflow
 | M1 | Setup: BigQuery sandbox, service account, Docker | done |
 | M2 | Loader: hourly pollutants + weather, backfill from August 2022, idempotent monthly loads | done |
 | M3 | dbt staging models, source freshness | done |
-| M4 | dbt core models: star schema, Indian AQI (CPCB) | |
+| M4 | dbt core models: star schema, Indian AQI (CPCB) | done |
 | M5 | dbt tests and docs | |
 | M6 | Daily schedule on GitHub Actions | |
 | M7 | Airflow DAG with backfills | |
@@ -69,6 +69,56 @@ the latest day 5 hours), so daily models will keep complete days only.
 docker compose run --rm app dbt build
 docker compose run --rm app dbt source freshness
 docker compose run --rm app python scripts/staging_report.py
+```
+
+## Star schema and Indian AQI (M4)
+
+```
+reference (seeds)            marts (tables, rebuilt daily)
+  cities ------------------>  dim_city   (15)
+  indian_festivals -------->  dim_date   (1,546 IST days: IMD season, festivals, days from Diwali)
+  cpcb_aqi_breakpoints --+    fct_air_quality_hourly (556,200: pollutants + weather, 8 h rolling O3/CO)
+                         +->  fct_city_daily         (23,160 complete city-days: CPCB AQI, category, dominant pollutant)
+```
+
+**AQI method (CPCB National AQI, 2014).** 24-hour means for PM2.5, PM10, NO2 and SO2; the day's highest 8-hour mean
+for O3 and CO (CO converted to mg/m³). Each pollutant's sub-index is interpolated linearly inside its band, and the
+AQI is the highest sub-index. Two choices CPCB leaves open: its integer breakpoints have gaps (PM2.5 Good ends at 30,
+Satisfactory starts at 31), so each band here starts where the previous one ends; and the Severe band is open-ended, so
+its upper concentration repeats the Very Poor band's width and the AQI is capped at 500. The 8-hour window is a time
+range, not a row count, and is only used when all 8 hours exist. Days with fewer than 24 IST hours are excluded.
+Festival dates come from the central government (DoPT) holiday lists; 2022 and 2026 Diwali were not checked against
+one, and the seed says so.
+
+**Verified independently.** [`scripts/marts_report.py`](scripts/marts_report.py) recomputes the AQI in pandas from
+the hourly staging view and the breakpoint CSV for 200 random city-days: 200/200 equal AQI and dominant pollutant.
+The first run gave 197/200; the 3 differences were sub-indices of exactly x.5, which BigQuery rounds up and
+Python's `round` rounds to even, so the check now rounds half up. `dbt build`: 3 seeds, 2 views, 4 tables,
+42 tests, all passing.
+
+**Finding: modelled ozone sets the AQI.** Ozone is the dominant pollutant on 20,622 of 23,160 city-days (89%); PM2.5
+on 1,815, PM10 on 686. The median daily 8-hour ozone maximum is 103-154 µg/m³ in every city, including coastal Kochi
+and Chennai, and anything over 100 is already "Moderate". Global chemistry models have been reported to simulate
+higher ozone than observed at Indian sites, partly because coarse grids miss the urban NOx that removes ozone
+([Hakim et al., 2019](https://acp.copernicus.org/articles/19/6437/2019/); not a CAMS-specific study). So this AQI is
+the CPCB formula applied to model output, not the official CPCB figure from ground stations. To show the particulate
+picture, `fct_city_daily` also has `aqi_pm`, the higher of the PM2.5 and PM10 sub-indices (not a CPCB index):
+
+| City | Mean AQI (all 6) | Days Poor or worse | Mean PM-only AQI | Days Poor or worse (PM) |
+|---|---|---|---|---|
+| Delhi | 236 | 56.9% | 182 | 36.1% |
+| Kanpur | 194 | 34.1% | 137 | 22.7% |
+| Lucknow | 187 | 31.7% | 122 | 17.9% |
+| Patna | 200 | 41.7% | 122 | 19.9% |
+| Kolkata | 183 | 39.0% | 117 | 21.7% |
+| Mumbai | 184 | 41.8% | 80 | 6.3% |
+| Bengaluru | 113 | 4.8% | 35 | 0.0% |
+
+All 15 cities: [`reports/marts_latest.json`](reports/marts_latest.json) (5 Aug 2022 - 26 Oct 2026). Across all
+city-days, the full AQI is Severe on 127 days and the PM-only index is also Severe on 127.
+
+```bash
+docker compose run --rm app python scripts/marts_report.py
 ```
 
 ## Data

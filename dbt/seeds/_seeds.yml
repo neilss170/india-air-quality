@@ -1,0 +1,38 @@
+version: 2
+
+seeds:
+  - name: cities
+    description: The 15 cities the loader requests (copy of config/cities.csv; city centre coordinates).
+    config:
+      column_types: {latitude: float64, longitude: float64, coastal: bool}
+    columns:
+      - name: city
+        data_tests: [unique, not_null]
+
+  - name: cpcb_aqi_breakpoints
+    description: >
+      CPCB National AQI (2014) breakpoints. PM2.5, PM10, NO2, SO2 on 24-hour means; O3 and CO on the day's
+      maximum 8-hour mean; CO in mg/m³, the rest in µg/m³. CPCB leaves the Severe band open-ended ("250+"); its
+      upper concentration here repeats the width of the Very Poor band, and the AQI is capped at 500
+      (conc_hi_extrapolated = true marks those rows).
+    config:
+      column_types: {aqi_lo: int64, aqi_hi: int64, conc_lo: float64, conc_hi: float64, conc_hi_extrapolated: bool}
+    columns:
+      - name: pollutant
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [pm25, pm10, no2, o3, co, so2]
+
+  - name: indian_festivals
+    description: >
+      Festivals and national days used to label dim_date. Lunar-calendar festival dates follow the central
+      government (DoPT) holiday lists; `source` records which, and flags the dates not checked against one.
+    config:
+      column_types: {date: date}
+    columns:
+      - name: kind
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [festival, national]

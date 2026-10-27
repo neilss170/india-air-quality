@@ -1,0 +1,109 @@
+version: 2
+
+models:
+  - name: dim_city
+    description: One row per city (15), with the model grid cells the two APIs answered from.
+    columns:
+      - name: city
+        data_tests: [unique, not_null]
+      - name: region
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [North, East, Northeast, West, South]
+
+  - name: dim_date
+    description: One row per IST date in the data; IMD season, festivals and days from that year's Diwali.
+    columns:
+      - name: date_day
+        data_tests: [unique, not_null]
+      - name: season
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [Winter, Pre-monsoon, Monsoon, Post-monsoon]
+      - name: days_from_diwali
+        description: Signed days from the same calendar year's Diwali (negative = before).
+
+  - name: fct_air_quality_hourly
+    description: >
+      One row per city per hour (grain city x measured_at_utc): CAMS pollutants (µg/m³) joined to ERA5 weather,
+      plus trailing 8-hour means of O3 and CO (null until 8 hours are available).
+    columns:
+      - name: city
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_city')
+                field: city
+      - name: measured_at_utc
+        data_tests: [not_null]
+      - name: date_ist
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+      - name: o3_8h_ugm3
+        description: Mean O3 over this hour and the 7 before it, µg/m³.
+      - name: co_8h_ugm3
+        description: Mean CO over this hour and the 7 before it, µg/m³.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [city, measured_at_utc]
+
+  - name: fct_city_daily
+    description: >
+      One row per city per complete IST day with the CPCB National AQI computed from modelled (CAMS)
+      concentrations. Not the official CPCB figure, which comes from ground stations.
+    columns:
+      - name: city
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_city')
+                field: city
+      - name: date_ist
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+      - name: aqi
+        description: Highest pollutant sub-index, rounded; 0-500.
+        data_tests: [not_null]
+      - name: aqi_category
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [Good, Satisfactory, Moderate, Poor, Very Poor, Severe]
+      - name: dominant_pollutant
+        description: Pollutant with the highest sub-index (ties broken alphabetically).
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [pm25, pm10, no2, o3, co, so2]
+      - name: aqi_pm
+        description: >
+          Particulate-only index: the higher of the PM2.5 and PM10 sub-indices. Not a CPCB figure; kept because
+          modelled ozone sets the full AQI on most days.
+        data_tests: [not_null]
+      - name: aqi_pm_category
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [Good, Satisfactory, Moderate, Poor, Very Poor, Severe]
+      - name: pollutants_indexed
+        description: Sub-indices computed for the day; 6 when every pollutant is present.
+      - name: hours
+        description: Hours in the day; always 24 (partial days are excluded).
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [city, date_ist]

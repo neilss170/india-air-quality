@@ -21,3 +21,12 @@ models:
     staging:
       +schema: staging
       +materialized: view
+    intermediate:
+      +materialized: ephemeral
+    marts:
+      +schema: marts
+      +materialized: table
+
+seeds:
+  india_air_quality:
+    +schema: reference

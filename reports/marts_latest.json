@@ -1,0 +1,264 @@
+{
+  "fct_city_daily": {
+    "rows": 23160,
+    "cities": 15,
+    "first_date": "2022-08-05",
+    "last_date": "2026-10-26",
+    "pollutants_indexed": {
+      "6": 23160
+    },
+    "category_days": {
+      "Good": 448,
+      "Satisfactory": 4904,
+      "Moderate": 12691,
+      "Poor": 3594,
+      "Very Poor": 1396,
+      "Severe": 127
+    },
+    "pm_category_days": {
+      "Good": 9873,
+      "Satisfactory": 8042,
+      "Moderate": 3198,
+      "Poor": 1173,
+      "Very Poor": 747,
+      "Severe": 127
+    },
+    "dominant_pollutant_days": {
+      "o3": 20622,
+      "pm25": 1815,
+      "pm10": 686,
+      "co": 30,
+      "no2": 5,
+      "so2": 2
+    }
+  },
+  "by_city": [
+    {
+      "city": "Delhi",
+      "days": 1544,
+      "mean_aqi": 235.753,
+      "median_aqi": 219.0,
+      "max_aqi": 500,
+      "share_poor_or_worse": 0.569,
+      "mean_aqi_pm": 182.455,
+      "share_pm_poor_or_worse": 0.361,
+      "top_dominant": "o3"
+    },
+    {
+      "city": "Patna",
+      "days": 1544,
+      "mean_aqi": 200.188,
+      "median_aqi": 189.0,
+      "max_aqi": 385,
+      "share_poor_or_worse": 0.417,
+      "mean_aqi_pm": 121.823,
+      "share_pm_poor_or_worse": 0.199,
+      "top_dominant": "o3"
+    },
+    {
+      "city": "Kanpur",
+      "days": 1544,
+      "mean_aqi": 194.321,
+      "median_aqi": 179.0,
+      "max_aqi": 500,
+      "share_poor_or_worse": 0.341,
+      "mean_aqi_pm": 137.003,
+      "share_pm_poor_or_worse": 0.227,
+      "top_dominant": "o3"
+    },
+    {
+      "city": "Lucknow",
+      "days": 1544,
+      "mean_aqi": 187.431,
+      "median_aqi": 176.0,
+      "max_aqi": 481,
+      "share_poor_or_worse": 0.317,
+      "mean_aqi_pm": 122.213,
+      "share_pm_poor_or_worse": 0.179,
+      "top_dominant": "o3"
+    },
+    {
+      "city": "Mumbai",
+      "days": 1544,
+      "mean_aqi": 183.593,
+      "median_aqi": 169.5,
+      "max_aqi": 423,
+      "share_poor_or_worse": 0.418,
+      "mean_aqi_pm": 79.76,
+      "share_pm_poor_or_worse": 0.063,
+      "top_dominant": "o3"
+    },
+    {
+      "city": "Kolkata",
+      "days": 1544,
+      "mean_aqi": 182.628,
+      "median_aqi": 170.0,
+      "max_aqi": 397,
+      "share_poor_or_worse": 0.39,
+      "mean_aqi_pm": 116.543,
+      "share_pm_poor_or_worse": 0.217,
+      "top_dominant": "o3"
+    },
+    {
+      "city": "Chandigarh",
+      "days": 1544,
+      "mean_aqi": 181.369,
+      "median_aqi": 177.0,
+      "max_aqi": 307,
+      "share_poor_or_worse": 0.307,
+      "mean_aqi_pm": 77.147,
+      "share_pm_poor_or_worse": 0.021,
+      "top_dominant": "o3"
+    },
+    {
+      "city": "Jaipur",
+      "days": 1544,
+      "mean_aqi": 150.525,
+      "median_aqi": 149.0,
+      "max_aqi": 500,
+      "share_poor_or_worse": 0.071,
+      "mean_aqi_pm": 91.071,
+      "share_pm_poor_or_worse": 0.048,
+      "top_dominant": "o3"
+    },
+    {
+      "city": "Hyderabad",
+      "days": 1544,
+      "mean_aqi": 134.109,
+      "median_aqi": 140.0,
+      "max_aqi": 285,
+      "share_poor_or_worse": 0.094,
+      "mean_aqi_pm": 48.264,
+      "share_pm_poor_or_worse": 0.001,
+      "top_dominant": "o3"
+    },
+    {
+      "city": "Pune",
+      "days": 1544,
+      "mean_aqi": 130.411,
+      "median_aqi": 141.0,
+      "max_aqi": 302,
+      "share_poor_or_worse": 0.089,
+      "mean_aqi_pm": 47.806,
+      "share_pm_poor_or_worse": 0.002,
+      "top_dominant": "o3"
+    },
+    {
+      "city": "Kochi",
+      "days": 1544,
+      "mean_aqi": 127.889,
+      "median_aqi": 117.0,
+      "max_aqi": 307,
+      "share_poor_or_worse": 0.15,
+      "mean_aqi_pm": 41.042,
+      "share_pm_poor_or_worse": 0.0,
+      "top_dominant": "o3"
+    },
+    {
+      "city": "Guwahati",
+      "days": 1544,
+      "mean_aqi": 124.903,
+      "median_aqi": 121.0,
+      "max_aqi": 301,
+      "share_poor_or_worse": 0.026,
+      "mean_aqi_pm": 51.213,
+      "share_pm_poor_or_worse": 0.003,
+      "top_dominant": "o3"
+    },
+    {
+      "city": "Ahmedabad",
+      "days": 1544,
+      "mean_aqi": 124.416,
+      "median_aqi": 124.0,
+      "max_aqi": 305,
+      "share_poor_or_worse": 0.04,
+      "mean_aqi_pm": 55.248,
+      "share_pm_poor_or_worse": 0.003,
+      "top_dominant": "o3"
+    },
+    {
+      "city": "Chennai",
+      "days": 1544,
+      "mean_aqi": 118.533,
+      "median_aqi": 113.0,
+      "max_aqi": 302,
+      "share_poor_or_worse": 0.038,
+      "mean_aqi_pm": 38.619,
+      "share_pm_poor_or_worse": 0.0,
+      "top_dominant": "o3"
+    },
+    {
+      "city": "Bengaluru",
+      "days": 1544,
+      "mean_aqi": 113.204,
+      "median_aqi": 105.0,
+      "max_aqi": 301,
+      "share_poor_or_worse": 0.048,
+      "mean_aqi_pm": 35.005,
+      "share_pm_poor_or_worse": 0.0,
+      "top_dominant": "o3"
+    }
+  ],
+  "independent_check": {
+    "sampled_city_days": 200,
+    "aqi_equal": 200,
+    "dominant_equal": 200,
+    "mismatches": []
+  },
+  "tables": {
+    "reference.cities": {
+      "type": "TABLE",
+      "rows": 15,
+      "created": "2026-10-27 11:14:12.743000+00:00",
+      "expires": "2026-12-26 11:14:12.743000+00:00"
+    },
+    "reference.cpcb_aqi_breakpoints": {
+      "type": "TABLE",
+      "rows": 36,
+      "created": "2026-10-27 11:14:12.096000+00:00",
+      "expires": "2026-12-26 11:14:12.096000+00:00"
+    },
+    "reference.indian_festivals": {
+      "type": "TABLE",
+      "rows": 28,
+      "created": "2026-10-27 11:14:13.094000+00:00",
+      "expires": "2026-12-26 11:14:13.094000+00:00"
+    },
+    "staging.stg_air_quality_hourly": {
+      "type": "VIEW",
+      "rows": 0,
+      "created": "2026-10-27 11:14:16.467000+00:00",
+      "expires": "2026-12-26 11:14:16.467000+00:00"
+    },
+    "staging.stg_weather_hourly": {
+      "type": "VIEW",
+      "rows": 0,
+      "created": "2026-10-27 11:14:17.494000+00:00",
+      "expires": "2026-12-26 11:14:17.494000+00:00"
+    },
+    "marts.dim_city": {
+      "type": "TABLE",
+      "rows": 15,
+      "created": "2026-10-27 11:14:24.878000+00:00",
+      "expires": "2026-12-26 11:14:24.878000+00:00"
+    },
+    "marts.dim_date": {
+      "type": "TABLE",
+      "rows": 1546,
+      "created": "2026-10-27 11:14:24.069000+00:00",
+      "expires": "2026-12-26 11:14:24.069000+00:00"
+    },
+    "marts.fct_air_quality_hourly": {
+      "type": "TABLE",
+      "rows": 556200,
+      "created": "2026-10-27 11:14:28.562000+00:00",
+      "expires": "2026-12-26 11:14:28.562000+00:00"
+    },
+    "marts.fct_city_daily": {
+      "type": "TABLE",
+      "rows": 23160,
+      "created": "2026-10-27 11:16:44.112000+00:00",
+      "expires": "2026-12-26 11:16:44.112000+00:00"
+    }
+  }
+}
