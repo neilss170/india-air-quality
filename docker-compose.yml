@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    image: india-air-quality:latest
+    working_dir: /app
+    volumes:
+      - .:/app
+    env_file:
+      - .env   # GCP_PROJECT and BQ_LOCATION, see .env.example

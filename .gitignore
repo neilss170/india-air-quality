@@ -1,0 +1,16 @@
+# credentials: never commit
+secrets/*
+!secrets/README.md
+.env
+*.json.key
+
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+logs/
