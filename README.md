@@ -29,7 +29,9 @@ into BigQuery `raw`:
 | `raw.air_quality_hourly` | PM2.5, PM10, NO₂, O₃, CO, SO₂ | 557,280 | 1,080 (1–3 Aug 2022: the model's history starts on 4 Aug) |
 | `raw.weather_hourly` | temperature, humidity, precipitation, wind speed and direction | 557,280 | 0 |
 
-Backfill: 1 Aug 2022 – 26 Oct 2026, 15 cities × 37,152 hours, 150 API requests, about 8 minutes.
+Backfill: 1 Aug 2022 – 26 Oct 2026, 15 cities × 37,152 hours, 150 API requests, about 8 minutes
+([`reports/load_backfill_2022-08_2026-10.json`](reports/load_backfill_2022-08_2026-10.json); `reports/load_latest.json` is
+overwritten by every load).
 
 **Idempotent without DML.** The free BigQuery sandbox rejects `DELETE`, `UPDATE` and `MERGE`, so the usual
 delete-then-insert or merge is unavailable. Instead the raw tables are integer-range partitioned on `month` (YYYYMM),
