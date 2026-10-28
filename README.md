@@ -152,6 +152,7 @@ scheduler because free, always-on Airflow hosting does not exist.
 | Raw rows | 557,280 per table (15 cities × 37,152 hours, 1 Aug 2022 - 26 Oct 2026), 0 duplicate (city, hour) |
 | Full backfill | 150 API requests, about 8 minutes ([report](reports/load_backfill_2022-08_2026-10.json)) |
 | Station backfill | 86,876 station-days from 83 stations, 358 API requests, 18 min ([report](reports/stations_backfill_2022-08_2026-10.json)); 73,453 (85%) complete; 1 station skipped (OpenAQ HTTP 500) |
+| Weekly station run | GitHub Actions, September-October 2026 replaced: 7,611 station-days, 248 API requests, 8 min 40 s |
 | Idempotency | November 2024 loaded twice: 10,800 rows both times; after the daily reload and four Airflow backfills the totals are unchanged |
 | Staging | 556,200 rows per view, 0 nulls in every measure ([report](reports/staging_latest.json)) |
 | Marts | 23,160 complete city-days, 1,546 dates, 15 cities |
