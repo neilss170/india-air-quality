@@ -483,7 +483,7 @@ function currentTheme() {
   const set = document.documentElement.dataset.theme;
   return set || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
 }
-function syncThemeButton() { $("#theme-toggle").textContent = currentTheme() === "dark" ? "Light mode" : "Dark mode"; }
+function syncThemeButton() { $("#theme-toggle").setAttribute("aria-checked", String(currentTheme() === "dark")); }
 $("#theme-toggle").addEventListener("click", () => {
   const next = currentTheme() === "dark" ? "light" : "dark";
   document.documentElement.dataset.theme = next;

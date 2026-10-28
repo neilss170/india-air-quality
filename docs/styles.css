@@ -93,10 +93,31 @@ main { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; paddin
 }
 
 /* header */
-header.top { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; padding: 20px 24px; }
+header.top { position: relative; display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between; padding: 20px 24px; }
+header.top > div:first-child { padding-right: 72px; }
 header.top h1 { font-size: 26px; line-height: 1.2; margin: 0 0 4px; letter-spacing: -0.01em; }
 header.top p { margin: 0; color: var(--ink-2); max-width: 640px; }
 .top-right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+/* light/dark switch in the header's top-right corner; the knob follows the theme in CSS, so it is right before JS runs */
+.theme-switch { position: absolute; top: 18px; right: 20px; width: 56px; height: 30px; padding: 0; border-radius: 999px;
+  border: 1px solid var(--ring); background: var(--chip); cursor: pointer; }
+.theme-switch:hover { background: var(--glass-strong); }
+.theme-switch:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+.theme-switch .knob { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center; background: #fcfcfb; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease; }
+.theme-switch svg { grid-area: 1 / 1; width: 14px; height: 14px; fill: none; stroke-width: 2; stroke-linecap: round; }
+.theme-switch .sun { stroke: var(--s4); fill: none; }
+.theme-switch .sun circle { fill: var(--s4); }
+.theme-switch .moon { fill: var(--s1); stroke: none; display: none; }
+:root[data-theme="dark"] .theme-switch .knob { transform: translateX(26px); }
+:root[data-theme="dark"] .theme-switch .sun { display: none; }
+:root[data-theme="dark"] .theme-switch .moon { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-switch .knob { transform: translateX(26px); }
+  :root:not([data-theme="light"]) .theme-switch .sun { display: none; }
+  :root:not([data-theme="light"]) .theme-switch .moon { display: block; }
+}
 .pill { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px; background: var(--chip); color: var(--ink-2); font-size: 13px; }
 .pill b { color: var(--ink); font-weight: 600; }
 .status-icon { width: 16px; height: 16px; flex: none; }
@@ -218,7 +239,7 @@ footer ul { margin: 6px 0 0; padding-left: 18px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .blob { animation: none; }
-  .grow-x, .grow-y, .draw, .fade, .reveal, .tour-spot, .tour-pop { transition: none; }
+  .grow-x, .grow-y, .draw, .fade, .reveal, .tour-spot, .tour-pop, .theme-switch .knob { transition: none; }
 }
 .no-motion *, .no-motion *::before { transition: none !important; animation: none !important; }
 .no-motion .grow-x, .no-motion .grow-y { transform: none; }

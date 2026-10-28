@@ -29,8 +29,13 @@
     <div class="top-right">
       <span class="pill" id="freshness" role="status">Loading data…</span>
       <button class="btn" id="tour-start" type="button">Take the tour</button>
-      <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light and dark theme">Dark mode</button>
     </div>
+    <button class="theme-switch" id="theme-toggle" type="button" role="switch" aria-checked="false" aria-label="Dark mode">
+      <span class="knob" aria-hidden="true">
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/></svg>
+        <svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
+      </span>
+    </button>
   </header>
 
   <section class="kpis" aria-label="Headline numbers">
