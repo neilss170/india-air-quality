@@ -27,6 +27,6 @@ if build.exists():
     print("dbt build: " + ", ".join(f"{n} {status}" for status, n in sorted(counts.items())) + "\n")
     for r in results:
         if r["status"] in ("warn", "fail", "error"):
-            print(f"- **{r['status']}** `{r['unique_id'].split('.')[-1]}`: {r.get('failures') or r.get('message')}")
+            print(f"- **{r['status']}** `{r['unique_id'].split('.')[2]}`: {r.get('failures') or r.get('message')}")
 else:
     print("dbt build results missing: the build did not run.")

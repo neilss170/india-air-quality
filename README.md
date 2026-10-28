@@ -13,8 +13,17 @@ Every number in this README comes from a measured run; the reports are in [`repo
 ## Tour
 
 The live page has a guided tour (**Take the tour** in the header, or open it with
-[`?tour`](https://neilss170.github.io/india-air-quality/?tour)): 11 steps that spotlight each part of the page and
+[`?tour`](https://neilss170.github.io/india-air-quality/?tour)): 12 steps that spotlight each part of the page and
 explain what it shows. Arrow keys move between steps and Esc closes it; the page stays usable during the tour.
+
+The page has three tabs, each with its own link:
+
+- **Overview** (below): the charts across all 15 cities.
+- **[City](https://neilss170.github.io/india-air-quality/?tab=city&city=Delhi)**: one city's latest complete day
+  next to the other 14, a calendar of every day's PM index since August 2022, and its 10 worst days with the weather.
+- **[Pipeline](https://neilss170.github.io/india-air-quality/?tab=pipeline)**: the run that built the page (rows
+  loaded, source freshness, dbt results with any warnings, slowest models), the recent runs of the daily workflow
+  from the GitHub API, and BigQuery table metadata including the sandbox expiry dates.
 
 ![Guided tour, step 7: the Diwali chart in the spotlight](assets/screenshots/0-guided-tour.png)
 

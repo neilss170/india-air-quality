@@ -397,15 +397,17 @@ const TABLES = {
 function renderTable(key) {
   const host = document.getElementById(`table-${key}`);
   host.textContent = "";
-  if (!openTables.has(key)) return;
-  const [head, body] = TABLES[key]();
+  if (openTables.has(key)) host.appendChild(buildTable(...TABLES[key]()));
+}
+function buildTable(head, body) {
   const wrap = document.createElement("div"); wrap.className = "table-wrap";
   const t = document.createElement("table"), tr = document.createElement("tr");
   for (const h of head) { const th = document.createElement("th"); th.textContent = h; tr.appendChild(th); }
   const thead = document.createElement("thead"); thead.appendChild(tr); t.appendChild(thead);
   const tb = document.createElement("tbody");
   for (const row of body) { const r = document.createElement("tr"); for (const c of row) { const td = document.createElement("td"); td.textContent = c; r.appendChild(td); } tb.appendChild(r); }
-  t.appendChild(tb); wrap.appendChild(t); host.appendChild(wrap);
+  t.appendChild(tb); wrap.appendChild(t);
+  return wrap;
 }
 
 // ---------- header, KPIs ----------
@@ -475,8 +477,42 @@ function wire() {
     renderTable(k);
   }));
   let timer;
-  window.addEventListener("resize", () => { clearTimeout(timer); timer = setTimeout(renderAll, 150); });
+  window.addEventListener("resize", () => { clearTimeout(timer); timer = setTimeout(() => TAB_RENDER[currentTab](), 150); });
 }
+
+// ---------- tabs ----------
+// tabs.js registers the City and Pipeline renderers. Charts measure their container, so a tab draws only when shown.
+const TAB_RENDER = { overview: renderAll };
+let currentTab = "overview";
+function showTab(name, focus = false) {
+  if (!TAB_RENDER[name]) name = "overview";
+  currentTab = name;
+  document.querySelectorAll('[role="tab"]').forEach((t) => {
+    const on = t.dataset.tab === name;
+    t.setAttribute("aria-selected", String(on));
+    t.tabIndex = on ? 0 : -1;
+    document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+    if (on && focus) t.focus();
+  });
+  setParam("tab", name === "overview" ? null : name);
+  hideTip();
+  if (D) TAB_RENDER[name]();
+}
+function setParam(key, value) {
+  const q = new URLSearchParams(location.search);
+  value == null ? q.delete(key) : q.set(key, value);
+  const qs = q.toString();
+  history.replaceState(null, "", `${location.pathname}${qs ? `?${qs}` : ""}${location.hash}`);
+}
+const tablist = $('[role="tablist"]');
+tablist.addEventListener("click", (e) => { const t = e.target.closest('[role="tab"]'); if (t) showTab(t.dataset.tab); });
+tablist.addEventListener("keydown", (e) => {
+  const tabs = [...tablist.querySelectorAll('[role="tab"]')], i = tabs.findIndex((t) => t.dataset.tab === currentTab);
+  const j = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+  if (j == null) return;
+  e.preventDefault();
+  showTab(tabs[(j + tabs.length) % tabs.length].dataset.tab, true);
+});
 
 // ---------- theme ----------
 function currentTheme() {
@@ -489,7 +525,7 @@ $("#theme-toggle").addEventListener("click", () => {
   document.documentElement.dataset.theme = next;
   try { localStorage.setItem("theme", next); } catch (e) {}
   syncThemeButton();
-  if (D) renderSeason(); // the heatmap interpolates colours in JS; everything else follows CSS variables
+  if (D && currentTab === "overview") renderSeason(); // the heatmap interpolates colours in JS; everything else follows CSS variables
 });
 syncThemeButton();
 
@@ -504,7 +540,8 @@ fetch("data/dashboard.json", { cache: "no-cache" })
   .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
   .then((data) => {
     D = data;
-    renderHeader(); countUp(); wire(); renderAll();
+    renderHeader(); countUp(); wire();
+    showTab(new URLSearchParams(location.search).get("tab") || "overview");
     document.dispatchEvent(new Event("dashboard:ready"));
   })
   .catch((err) => { $("#freshness").textContent = `Could not load data (${err.message})`; });

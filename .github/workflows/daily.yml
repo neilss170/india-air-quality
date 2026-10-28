@@ -12,6 +12,7 @@ concurrency:
 
 permissions:
   contents: read
+  actions: read   # the Pipeline tab lists this workflow's recent runs
 
 env:
   GCP_PROJECT: ${{ vars.GCP_PROJECT }}
@@ -54,6 +55,8 @@ jobs:
         run: dbt docs generate --static
 
       - name: Assemble site (dashboard + data + dbt docs)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           mkdir -p site/dbt
           cp -r docs/. site/

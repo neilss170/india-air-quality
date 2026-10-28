@@ -1,6 +1,8 @@
 """Export the marts to the JSON the dashboard reads -> docs/data/dashboard.json.
 
 Every number on the dashboard comes from this file; the page does no statistics of its own beyond formatting.
+The Pipeline tab also reads the run's reports (loader, dbt build, source freshness), BigQuery table metadata and
+the workflow's run history from the GitHub API; each part is left out when its source is missing (e.g. locally).
 
     python scripts/export_dashboard.py [--out docs/data/dashboard.json]
 """
@@ -8,6 +10,8 @@ import argparse
 import datetime as dt
 import json
 import os
+import urllib.request
+from collections import Counter
 from pathlib import Path
 
 from google.cloud import bigquery
@@ -98,6 +102,101 @@ data = {
         FROM {M}.fct_city_daily f JOIN {M}.dim_date d ON d.date_day = f.date_ist
         GROUP BY 1, 2 ORDER BY 1, 2"""),
 }
+
+# ---------- City tab ----------
+# every complete day's PM index per city, as one array per city aligned to consecutive dates from `start`
+daily = rows(f"SELECT city, date_ist, aqi_pm FROM {M}.fct_city_daily ORDER BY city, date_ist")
+start = min(dt.date.fromisoformat(r["date_ist"]) for r in daily)
+end = max(dt.date.fromisoformat(r["date_ist"]) for r in daily)
+series = {}
+for r in daily:
+    s = series.setdefault(r["city"], [None] * ((end - start).days + 1))
+    s[(dt.date.fromisoformat(r["date_ist"]) - start).days] = r["aqi_pm"]
+data["daily_pm"] = {"start": start.isoformat(), "cities": series}
+
+CITY_DAY = """f.city, f.date_ist, f.aqi_pm, f.aqi_pm_category, f.aqi, f.aqi_category, f.dominant_pollutant,
+              IF(f.pm25_sub_index >= f.pm10_sub_index, 'pm25', 'pm10') AS pm_driver,
+              f.pm25_24h_ugm3 AS pm25, f.pm10_24h_ugm3 AS pm10, f.temperature_mean_c AS temp_c,
+              f.precipitation_mm AS rain_mm, f.wind_speed_mean_kmh AS wind_kmh"""
+data["latest_day"] = rows(f"""
+    SELECT {CITY_DAY}, RANK() OVER (PARTITION BY f.date_ist ORDER BY f.aqi_pm DESC) AS rank_that_day
+    FROM {M}.fct_city_daily f
+    QUALIFY f.date_ist = MAX(f.date_ist) OVER () ORDER BY f.aqi_pm DESC""")
+data["worst_days"] = rows(f"""
+    SELECT {CITY_DAY} FROM {M}.fct_city_daily f
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY f.city ORDER BY f.aqi_pm DESC, f.date_ist) <= 10
+    ORDER BY f.city, f.aqi_pm DESC, f.date_ist""")
+
+
+# ---------- Pipeline tab ----------
+def read_json(path: Path):
+    return json.loads(path.read_text()) if path.exists() else None
+
+
+def node_name(unique_id: str) -> str:
+    # model.<project>.<name>, test.<project>.<name>.<hash>, unit_test.<project>.<model>.<name>
+    parts = unique_id.split(".")
+    return ".".join(parts[2:4]) if parts[0] == "unit_test" else parts[2]
+
+
+def github_runs(limit: int = 30) -> list[dict] | None:
+    """Recent completed runs of the daily workflow (the run that is exporting is still in progress, so not listed)."""
+    repo = os.environ.get("GITHUB_REPOSITORY", "neilss170/india-air-quality")
+    req = urllib.request.Request(
+        f"https://api.github.com/repos/{repo}/actions/workflows/daily.yml/runs?status=completed&per_page={limit}",
+        headers={"Accept": "application/vnd.github+json"})
+    if os.environ.get("GITHUB_TOKEN"):
+        req.add_header("Authorization", f"Bearer {os.environ['GITHUB_TOKEN']}")
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            runs = json.load(resp)["workflow_runs"]
+    except OSError as e:
+        print(f"GitHub run history unavailable: {e}")
+        return None
+    ts = lambda s: dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
+    return [{"started_at": r["run_started_at"], "event": r["event"], "conclusion": r["conclusion"],
+             "seconds": round((ts(r["updated_at"]) - ts(r["run_started_at"])).total_seconds()),
+             "sha": r["head_sha"][:7], "url": r["html_url"]} for r in runs]
+
+
+runs = github_runs()
+pipeline = {"runs": runs, "load": read_json(ROOT / "reports" / "load_latest.json")}
+if runs:
+    secs = sorted(r["seconds"] for r in runs if r["conclusion"] == "success")
+    pipeline["runs_summary"] = {
+        "completed": len(runs), "succeeded": sum(r["conclusion"] == "success" for r in runs),
+        "scheduled": sum(r["event"] == "schedule" for r in runs),
+        "scheduled_succeeded": sum(r["event"] == "schedule" and r["conclusion"] == "success" for r in runs),
+        "median_success_s": secs[len(secs) // 2] if secs else None}
+
+build = read_json(ROOT / "reports" / "dbt_build_results.json")
+if build:
+    nodes = [{"name": node_name(r["unique_id"]), "type": r["unique_id"].split(".")[0], "status": r["status"],
+              "seconds": round(r["execution_time"], 1), "message": r.get("message"), "failures": r.get("failures")}
+             for r in build["results"]]
+    pipeline["dbt"] = {
+        "generated_at": build["metadata"]["generated_at"], "elapsed_s": round(build["elapsed_time"], 1),
+        "counts": [{"type": t, "status": s, "n": n}
+                   for (t, s), n in sorted(Counter((n["type"], n["status"]) for n in nodes).items())],
+        "checks": sum(n["type"] in ("test", "unit_test") for n in nodes),
+        "checks_passed": sum(n["type"] in ("test", "unit_test") and n["status"] == "pass" for n in nodes),
+        "not_passing": [n for n in nodes if n["status"] not in ("pass", "success")],
+        "slowest_models": sorted((n for n in nodes if n["type"] == "model"), key=lambda n: -n["seconds"])[:5],
+    }
+
+fresh = read_json(ROOT / "dbt" / "target" / "sources.json")
+if fresh:
+    pipeline["freshness"] = [{"source": r["unique_id"].split(".")[-1], "status": r["status"],
+                              "max_loaded_at": r["max_loaded_at"], "checked_at": r["snapshotted_at"]}
+                             for r in fresh["results"]]
+
+pipeline["tables"] = []
+for ds in ("raw", "marts", "reference"):
+    for item in c.list_tables(f"{c.project}.{ds}"):
+        t = c.get_table(item.reference)
+        pipeline["tables"].append({"table": f"{ds}.{t.table_id}", "rows": t.num_rows, "mib": round(t.num_bytes / 2**20, 1),
+                                   "expires": t.expires.isoformat() if t.expires else None})
+data["pipeline"] = pipeline
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--out", default=str(ROOT / "docs" / "data" / "dashboard.json"))

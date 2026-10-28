@@ -38,6 +38,13 @@
     </button>
   </header>
 
+  <nav class="tabs seg reveal" role="tablist" aria-label="Views">
+    <button class="chip" role="tab" id="tab-overview" data-tab="overview" aria-controls="panel-overview" aria-selected="true">Overview</button>
+    <button class="chip" role="tab" id="tab-city" data-tab="city" aria-controls="panel-city" aria-selected="false" tabindex="-1">City</button>
+    <button class="chip" role="tab" id="tab-pipeline" data-tab="pipeline" aria-controls="panel-pipeline" aria-selected="false" tabindex="-1">Pipeline</button>
+  </nav>
+
+  <div role="tabpanel" id="panel-overview" aria-labelledby="tab-overview">
   <section class="kpis" aria-label="Headline numbers">
     <div class="kpi glass reveal"><div class="label">City-hours modelled</div><div class="value" data-count="hourly_rows">–</div><div class="sub" id="kpi-hours-sub"></div></div>
     <div class="kpi glass reveal"><div class="label">Complete city-days</div><div class="value" data-count="city_days">–</div><div class="sub">24 IST hours each</div></div>
@@ -134,6 +141,77 @@
       <button class="btn table-toggle" data-table="season">Show table</button><div id="table-season"></div>
     </section>
   </div>
+  </div>
+
+  <div role="tabpanel" id="panel-city" aria-labelledby="tab-city" hidden>
+    <div class="grid">
+      <section class="card glass wide" id="card-today">
+        <div class="card-head">
+          <div><h2 id="today-title">Latest complete day</h2><p class="sub" id="today-sub"></p></div>
+          <div class="controls"><select id="city-pick" aria-label="City"></select></div>
+        </div>
+        <div class="today">
+          <div class="today-stats" id="today-stats"></div>
+          <div><p class="sub">All 15 cities that day, PM index</p><div class="chart" id="chart-today"></div></div>
+        </div>
+      </section>
+
+      <section class="card glass wide" id="card-calendar">
+        <div class="card-head">
+          <div><h2>Every day since August 2022</h2><p class="sub">Daily PM index by CPCB category, one row per month.
+            The source model was upgraded in June 2023 and November 2024, so compare years with care.</p></div>
+        </div>
+        <div class="legend" id="legend-calendar"></div>
+        <div class="chart" id="chart-calendar"></div>
+      </section>
+
+      <section class="card glass wide" id="card-worst">
+        <div class="card-head">
+          <div><h2 id="worst-title">The 10 worst days</h2><p class="sub">Highest daily PM index, with that day's weather</p></div>
+        </div>
+        <div id="table-worst"></div>
+      </section>
+    </div>
+  </div>
+
+  <div role="tabpanel" id="panel-pipeline" aria-labelledby="tab-pipeline" hidden>
+    <section class="kpis" aria-label="Pipeline numbers" id="pipe-kpis"></section>
+    <div class="grid">
+      <section class="card glass wide" id="card-flow">
+        <div class="card-head">
+          <div><h2>What one run does</h2><p class="sub" id="flow-sub">Steps of the daily GitHub Actions job, with numbers from the run that built this page</p></div>
+        </div>
+        <ol class="flow" id="flow"></ol>
+      </section>
+
+      <section class="card glass wide" id="card-runs">
+        <div class="card-head">
+          <div><h2>Recent runs</h2><p class="sub">Time from start to finish of each completed run, oldest first; click a bar to open the run</p></div>
+        </div>
+        <p class="finding" id="finding-runs"></p>
+        <div class="legend" id="legend-runs"></div>
+        <div class="chart" id="chart-runs"></div>
+      </section>
+
+      <section class="card glass" id="card-tests">
+        <div class="card-head">
+          <div><h2>dbt build</h2><p class="sub" id="tests-sub"></p></div>
+        </div>
+        <div id="table-tests"></div>
+        <p class="finding" id="finding-tests"></p>
+        <h3 class="minor">Slowest models</h3>
+        <div id="table-slow"></div>
+      </section>
+
+      <section class="card glass" id="card-tables">
+        <div class="card-head">
+          <div><h2>Warehouse tables</h2><p class="sub">BigQuery metadata at export time. Sandbox tables expire after 60 days;
+            every run pushes the date forward.</p></div>
+        </div>
+        <div id="table-tables"></div>
+      </section>
+    </div>
+  </div>
 
   <footer class="glass reveal">
     <b>About the data.</b> Air quality: CAMS global model via the Open-Meteo Air Quality API; weather: ERA5 reanalysis
@@ -147,6 +225,7 @@
 </main>
 <div class="tooltip" id="tooltip" role="tooltip"></div>
 <script src="app.js?v=dev" defer></script>
+<script src="tabs.js?v=dev" defer></script>
 <script src="tour.js?v=dev" defer></script>
 </body>
 </html>

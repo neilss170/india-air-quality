@@ -7,7 +7,9 @@
   const STEPS = [
     { sel: "#freshness", title: "How fresh is the data?",
       body: "Green means the newest hour is less than 48 hours old. The pipeline loads, tests and republishes everything every morning, around 08:15 IST." },
-    { sel: ".kpis", title: "Headline numbers",
+    { sel: ".tabs", title: "Three views",
+      body: "This tour covers Overview. City shows one city's latest day, every day since 2022 and its worst days. Pipeline shows how the daily job runs: recent runs, the dbt tests and the warehouse tables." },
+    { sel: "#panel-overview .kpis", title: "Headline numbers",
       body: "Counted in the warehouse on every run: hours of data, complete city-days, how many were “Poor” or worse, and how often ozone sets the full AQI." },
     { sel: ".note", title: "Why two indices",
       body: "Modelled ozone sets the official-formula AQI on most days, even in clean coastal cities. So the charts lead with the PM index: the same CPCB formula on PM2.5 and PM10 only." },
@@ -103,6 +105,7 @@
 
   function start(n = 0) {
     if (!spot) build();
+    if (currentTab !== "overview") showTab("overview"); // every step is on the Overview tab
     lastFocus = document.activeElement;
     document.documentElement.classList.add("touring");
     spot.classList.add("on"); pop.classList.add("on");
