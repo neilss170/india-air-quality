@@ -24,6 +24,18 @@ seeds:
               arguments:
                 values: [pm25, pm10, no2, o3, co, so2]
 
+  - name: cams_model_cycles
+    description: >
+      Upgrades of the CAMS global model during the data, from ECMWF's announcements. Both changed how dust is
+      modelled, so model-vs-station comparisons are split at these dates. Days before the first are "before 48R1".
+    config:
+      column_types: {start_date: date}
+    columns:
+      - name: cycle
+        data_tests: [unique, not_null]
+      - name: start_date
+        data_tests: [unique, not_null]
+
   - name: indian_festivals
     description: >
       Festivals and national days used to label dim_date. Lunar-calendar festival dates follow the central

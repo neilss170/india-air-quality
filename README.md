@@ -2,7 +2,7 @@
 
 A daily ELT pipeline for hourly air quality and weather in 15 Indian cities, August 2022 to today:
 Open-Meteo APIs → BigQuery → dbt (models and tests) → a static dashboard. GitHub Actions runs it every morning;
-an Airflow DAG handles backfills.
+an Airflow DAG handles backfills. The model data is checked against government ground stations (OpenAQ), loaded weekly.
 
 - Dashboard: [neilss170.github.io/india-air-quality](https://neilss170.github.io/india-air-quality/)
 - Guided tour of the dashboard: [neilss170.github.io/india-air-quality/?tour](https://neilss170.github.io/india-air-quality/?tour)
@@ -21,6 +21,8 @@ The page has three tabs, each with its own link:
 - **Overview** (below): the charts across all 15 cities.
 - **[City](https://neilss170.github.io/india-air-quality/?tab=city&city=Delhi)**: one city's latest complete day
   next to the other 14, a calendar of every day's PM index since August 2022, and its 10 worst days with the weather.
+- **[Model check](https://neilss170.github.io/india-air-quality/?tab=check)**: the model's daily PM2.5 and PM10
+  against the 3 nearest ground stations, by city, month and model version.
 - **[Pipeline](https://neilss170.github.io/india-air-quality/?tab=pipeline)**: the run that built the page (rows
   loaded, source freshness, dbt results with any warnings, slowest models), the recent runs of the daily workflow
   from the GitHub API, and BigQuery table metadata including the sandbox expiry dates.
@@ -81,19 +83,22 @@ six runs, none failed.
 ## Architecture
 
 ```
-Open-Meteo APIs (CAMS air quality, ERA5 weather)
-   │  loader/ (Python): one request per city, retries, UTC hours
-   ▼
+Open-Meteo APIs (CAMS air quality, ERA5 weather)       OpenAQ API (ground stations, mostly CPCB)
+   │  loader/main.py: daily, one request per city          │  loader/stations.py: weekly, 6 nearest monitors per city
+   ▼                                                       ▼
 BigQuery raw          integer-range partitioned by month; each load replaces whole months
    │  dbt
-   ├─ staging         views: typed, units in names, IST time, negative model values floored at 0
-   ├─ reference       seeds: cities, CPCB AQI breakpoints, festival dates
-   └─ marts           tables: dim_city, dim_date, fct_air_quality_hourly, fct_city_daily
+   ├─ staging         views: typed, units in names, IST time, negative model values floored at 0,
+   │                  station-days flagged complete or not
+   ├─ reference       seeds: cities, CPCB AQI breakpoints, festival dates, CAMS model upgrades
+   └─ marts           tables: dim_city, dim_date, fct_air_quality_hourly, fct_city_daily,
+                      fct_station_vs_model_daily
    │  scripts/export_dashboard.py
    ▼
 GitHub Pages          dashboard (vanilla JS, hand-written SVG) + dbt docs
 
-Scheduler: GitHub Actions, daily 02:47 UTC (load → freshness → dbt build → export → deploy)
+Scheduler: GitHub Actions, daily 02:47 UTC (load → freshness → dbt build → export → deploy);
+           stations weekly, Mondays 02:17 UTC (OpenAQ allows 60 requests a minute)
 Backfills: Airflow 3 in Docker, one DAG run per month
 ```
 
@@ -118,12 +123,21 @@ open-ended Severe band repeats the width of the band below it, capped at 500. Su
 before the AQI is rounded, because BigQuery's float `AVG` is not order-stable and values of exactly x.5 otherwise
 rounded differently between runs.
 
-**Tests.** `dbt build` runs 72 data tests and 1 unit test. Besides keys, relationships and accepted values there
+**Tests.** `dbt build` runs 92 data tests and 1 unit test. Besides keys, relationships and accepted values there
 are custom generic tests for value ranges, (city, hour) uniqueness and exactly 24 hours per city per day, a check that
 every city has every day, source freshness, and a recency warning. The unit test runs the AQI logic on fixed inputs
 with hand-computed answers (and fails when an expected value is changed). Independently,
 [`scripts/marts_report.py`](scripts/marts_report.py) recomputes the AQI in pandas from the hourly data for 200 random
 city-days.
+
+**Ground stations.** [`loader/stations.py`](loader/stations.py) finds the 6 nearest reference monitors within 25 km
+of each city (OpenAQ `monitor=true`, so no low-cost sensors) and loads their daily PM2.5 and PM10 means; OpenAQ's days
+are IST days, like the marts. Stations change sensor ids over time (Delhi's R K Puram has one set for 2016-2018 and
+another from February 2025), so sensors are chosen by their own date ranges. OpenAQ's coverage percentage can exceed
+100%, so staging judges a station-day complete itself (at least 18 measurements spread over at least 18 hours).
+`fct_station_vs_model_daily` compares each city-day with the mean of the 3 nearest stations that have a complete day,
+and labels it with the CAMS cycle from a seed. A station that keeps failing on OpenAQ's side is skipped and named in
+the run report instead of stopping the load.
 
 **Airflow.** [`orchestration/dags/india_air_quality.py`](orchestration/dags/india_air_quality.py):
 `load_month → check_month → source_freshness → dbt_build`, one run per calendar month. It uses
@@ -137,10 +151,11 @@ scheduler because free, always-on Airflow hosting does not exist.
 |---|---|
 | Raw rows | 557,280 per table (15 cities × 37,152 hours, 1 Aug 2022 - 26 Oct 2026), 0 duplicate (city, hour) |
 | Full backfill | 150 API requests, about 8 minutes ([report](reports/load_backfill_2022-08_2026-10.json)) |
+| Station backfill | 86,876 station-days from 83 stations, 358 API requests, 18 min ([report](reports/stations_backfill_2022-08_2026-10.json)); 73,453 (85%) complete; 1 station skipped (OpenAQ HTTP 500) |
 | Idempotency | November 2024 loaded twice: 10,800 rows both times; after the daily reload and four Airflow backfills the totals are unchanged |
 | Staging | 556,200 rows per view, 0 nulls in every measure ([report](reports/staging_latest.json)) |
 | Marts | 23,160 complete city-days, 1,546 dates, 15 cities |
-| `dbt build` | 80 pass, 2 warn, 0 fail |
+| `dbt build` | 103 pass, 2 warn, 0 fail (9 models, 4 seeds, 92 data tests, 1 unit test) |
 | AQI cross-check | 200 / 200 random city-days match the pandas recomputation ([report](reports/marts_latest.json)) |
 | Daily job | 3 min 14 s plus 9 s deploy; the load step reloaded October 2026 (9,360 rows per table) in 46 s |
 | Airflow backfill | one month in 93 s (load 30 s, check 3 s, freshness 9 s, `dbt build` 48 s) |
@@ -183,15 +198,34 @@ ozone: all 122 hours above 500 µg/m³ are in Mumbai (peak 930 on 13 March 2023)
 - **Seasons.** Kanpur, Lucknow, Patna and Kolkata have their worst three months in November-January; Delhi's are
   January, May and November. Bengaluru, Chennai and Kochi are Good or Satisfactory on the PM index on over 99% of
   days; Mumbai on 78.7%.
-- **Delhi's May jump is mostly the model.** Delhi's May PM index went 104 (2023), 149 (2024), 321 (2025), 380 (2026).
+- **Delhi's May jump is the model, not the air.** Delhi's May PM index went 104 (2023), 149 (2024), 321 (2025), 380 (2026).
   Almost all of it is coarse dust: May PM10 averaged 90, 173, 366 and 486 µg/m³, while PM2.5 only went 56, 53, 83,
   103, and Kanpur and Jaipur show the same pattern. The steps line up with two CAMS upgrades that changed the dust
   scheme: [cycle 48R1](https://confluence.ecmwf.int/spaces/COPSRV/pages/315580957/Implementation+of+IFS+cycle+48r1+for+CAMS)
   on 27 June 2023 (more and coarser dust) and
   [cycle 49R1](https://forum.ecmwf.int/t/cams-model-cy49r1-successfully-upgraded-on-12-november-2024/7622) on
-  12 November 2024 (new dust source function). There was a real dust storm on 14-15 May 2025, but ground stations
-  [peaked at about 338 µg/m³ PM10](https://www.theweek.in/wire-updates/national/2025/05/15/des92-delhi-ld-dust.html),
-  below the model's mean of 366 for the whole month.
+  12 November 2024 (new dust source function). Ground stations confirm it (next section): on the May days with
+  station data, Delhi's stations averaged 151 µg/m³ PM10 in 2025 and 164 in 2026, against 375 and 510 in the model.
+
+### Model vs ground stations
+
+Each city-day is compared with the mean of its 3 nearest stations that have a complete day: 12,267 city-days for
+PM2.5 and 8,639 for PM10 ([Model check tab](https://neilss170.github.io/india-air-quality/?tab=check)).
+
+- **The model reads low overall:** PM2.5 17% below the stations (mean 41 vs 49 µg/m³, daily correlation r = 0.62),
+  PM10 22% below (71 vs 91, r = 0.32).
+- **Except for dust in the north.** PM10 is 85% too high in Kanpur, 53% in Delhi and 17% in Jaipur, and 47-66% too low
+  in Kochi, Mumbai, Guwahati, Hyderabad, Ahmedabad, Bengaluru, Chennai and Pune. The overestimate sits in the
+  pre-monsoon months: from March to May, Kanpur's model PM10 averaged 295 µg/m³ in 2025 and 301 in 2026, against 93
+  and 87 at the stations.
+- **The storm was real; the rest of May was not.** On 15 May 2025, the dust-storm day, the model's Delhi PM10 (420)
+  matched the stations (412). Over the month the model averaged 375 against the stations' 151.
+- **Delhi's May PM2.5:** stations 58, 84, 60, 52 µg/m³ (2023-2026), model 56, 53, 83, 103: from 4% under to 98% over.
+  This fits the upgrades, but the stations behind each year differ (the 2024 figure rests on a single monitor).
+- **What cannot be tested yet.** OpenAQ has no PM10 station data for these cities from November 2022 to
+  18 February 2025, and PM2.5 under cycle 48R1 comes from one monitor in each of 5 cities. In the one season with PM10 on both
+  sides of the upgrades (September-October), Delhi's model-vs-station gap stayed small: 0% in 2022, -10% in 2025,
+  +18% in 2026.
 
 ## Limits
 
@@ -205,6 +239,8 @@ ozone: all 122 hours above 500 µg/m³ are in Mumbai (peak 930 on 13 March 2023)
 - Two Diwali dates (2022 and 2026) were not checked against a government holiday list; the seed records the source of
   each date.
 - The Airflow pool has not been exercised by a real overlap of two runs; it is a safeguard.
+- Station data in OpenAQ is thin before 2025 (see above), so comparisons across model versions rest on different
+  days, seasons and stations. A station measures one spot and the model a grid cell, so some gap is expected anyway.
 
 ## Run it
 
@@ -215,6 +251,7 @@ Editor and Job User. Put the key at `secrets/gcp-key.json` and copy `.env.exampl
 docker compose build app
 docker compose run --rm app python scripts/check_connection.py
 docker compose run --rm app python -m loader.main --start 2022-08-01   # backfill to yesterday
+docker compose run --rm app python -m loader.stations --start 2022-08-01   # ground stations (needs OPENAQ_API_KEY)
 docker compose run --rm app dbt build
 docker compose run --rm app python scripts/export_dashboard.py       # writes docs/data/dashboard.json
 docker compose run --rm app python -m pytest
@@ -226,10 +263,12 @@ docker compose --profile airflow exec airflow airflow backfill create \
     --dag-id india_air_quality_monthly --from-date 2024-11-01 --to-date 2024-11-01
 ```
 
-In GitHub Actions the key is the `GCP_SA_KEY` secret and the project and location are repository variables.
+In GitHub Actions the keys are the `GCP_SA_KEY` and `OPENAQ_API_KEY` secrets and the project and location are
+repository variables.
 
 ## Data
 
 Air quality: [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api) (CAMS global model, hourly
 from 4 August 2022). Weather: [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api)
-(ERA5 reanalysis). AQI breakpoints: CPCB National Air Quality Index (2014).
+(ERA5 reanalysis). Ground stations: [OpenAQ](https://openaq.org) API v3, mostly CPCB's continuous monitoring
+stations. AQI breakpoints: CPCB National Air Quality Index (2014).

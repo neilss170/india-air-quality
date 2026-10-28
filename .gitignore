@@ -22,3 +22,4 @@ docs/data/
 # rewritten by every run
 reports/load_latest.json
 reports/dbt_build_results.json
+reports/stations_latest.json

@@ -7,8 +7,8 @@
   const STEPS = [
     { sel: "#freshness", title: "How fresh is the data?",
       body: "Green means the newest hour is less than 48 hours old. The pipeline loads, tests and republishes everything every morning, around 08:15 IST." },
-    { sel: ".tabs", title: "Three views",
-      body: "This tour covers Overview. City shows one city's latest day, every day since 2022 and its worst days. Pipeline shows how the daily job runs: recent runs, the dbt tests and the warehouse tables." },
+    { sel: ".tabs", title: "Four views",
+      body: "This tour covers Overview. City shows one city's latest day, every day since 2022 and its worst days. Model check compares the model with ground stations. Pipeline shows how the daily job runs: recent runs, the dbt tests and the warehouse tables." },
     { sel: "#panel-overview .kpis", title: "Headline numbers",
       body: "Counted in the warehouse on every run: hours of data, complete city-days, how many were “Poor” or worse, and how often ozone sets the full AQI." },
     { sel: ".note", title: "Why two indices",

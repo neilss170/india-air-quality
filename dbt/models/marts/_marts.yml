@@ -143,3 +143,45 @@ models:
       - unique_combination:
           arguments:
             columns: [city, date_ist]
+
+  - name: fct_station_vs_model_daily
+    description: >
+      Model vs ground stations: one row per city, IST day and pollutant where stations have a complete day. The
+      station value is the mean of the 3 nearest stations with a complete day (fewer if fewer reported); the model
+      value is the CAMS 24-hour mean from fct_city_daily. Stations measure a point, the model a grid cell tens of km wide,
+      so some difference is expected even for a perfect model.
+    columns:
+      - name: city
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_city')
+                field: city
+      - name: parameter
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [pm25, pm10]
+      - name: model_ugm3
+        data_tests: [not_null]
+      - name: station_ugm3
+        data_tests:
+          - not_null
+          - accepted_range:
+              arguments: {min_value: 0, max_value: 2000}
+      - name: stations
+        description: Stations averaged, 1 to 3.
+        data_tests:
+          - accepted_range:
+              arguments: {min_value: 1, max_value: 3}
+      - name: model_cycle
+        description: CAMS cycle in use that day (see the cams_model_cycles seed).
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [before 48R1, 48R1, 49R1]
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [city, date_ist, parameter]

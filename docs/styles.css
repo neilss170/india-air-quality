@@ -165,8 +165,9 @@ select option { background: var(--surface); color: var(--ink); }
 .today dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 .chart .pick { cursor: pointer; }
 /* the City and Pipeline tables are short: show them whole, and keep dates and names on one line */
-#panel-city .table-wrap, #panel-pipeline .table-wrap { max-height: none; }
-#panel-city td:first-child, #panel-pipeline td:first-child { white-space: nowrap; }
+#panel-city .table-wrap, #panel-check .table-wrap, #panel-pipeline .table-wrap { max-height: none; }
+#panel-city td:first-child, #panel-check td:first-child, #panel-pipeline td:first-child { white-space: nowrap; }
+.check-note { margin: 16px 0 0; }
 
 /* Pipeline tab */
 .flow { list-style: none; padding: 0; margin: 14px 0 4px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }

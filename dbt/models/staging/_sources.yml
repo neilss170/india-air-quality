@@ -79,3 +79,28 @@ sources:
           - unique_combination:
               arguments:
                 columns: [city, ts]
+      - name: station_pm_daily
+        description: >
+          Daily PM2.5 and PM10 means from ground stations (OpenAQ v3, mostly CPCB), one row per city, sensor and
+          local (IST) day; written by `loader/stations.py` for the 6 nearest reference monitors of each city.
+        config:
+          # loaded weekly, not daily
+          freshness:
+            warn_after: {count: 9, period: day}
+            error_after: {count: 30, period: day}
+        columns:
+          - name: city
+            data_tests: [not_null]
+          - name: sensor_id
+            data_tests: [not_null]
+          - name: date_local
+            data_tests: [not_null]
+          - name: parameter
+            data_tests:
+              - accepted_values:
+                  arguments:
+                    values: [pm25, pm10]
+        data_tests:
+          - unique_combination:
+              arguments:
+                columns: [city, sensor_id, date_local]

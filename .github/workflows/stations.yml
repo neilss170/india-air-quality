@@ -1,0 +1,53 @@
+name: stations
+
+# Reload the last 35 days of ground-station PM (whole months are replaced) into raw.station_pm_daily.
+# Weekly, not daily: OpenAQ allows 60 requests a minute and a run needs about 285. The daily workflow then
+# rebuilds the model-vs-station mart from whatever is loaded.
+on:
+  schedule:
+    - cron: "17 2 * * 1"   # Mondays 02:17 UTC, half an hour before the daily run
+  workflow_dispatch:
+
+concurrency:
+  group: stations
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  GCP_PROJECT: ${{ vars.GCP_PROJECT }}
+  BQ_LOCATION: ${{ vars.BQ_LOCATION }}
+  GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/secrets/gcp-key.json
+
+jobs:
+  load:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: Write service-account key
+        env:
+          KEY: ${{ secrets.GCP_SA_KEY }}
+        run: printf '%s' "$KEY" > "$GOOGLE_APPLICATION_CREDENTIALS"
+
+      - name: Load the last 35 days of station PM
+        env:
+          OPENAQ_API_KEY: ${{ secrets.OPENAQ_API_KEY }}
+        run: python -m loader.stations --days 35
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: stations-report
+          path: reports/stations_latest.json
+
+      - name: Remove key
+        if: always()
+        run: rm -f "$GOOGLE_APPLICATION_CREDENTIALS"

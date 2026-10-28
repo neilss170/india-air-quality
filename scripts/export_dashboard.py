@@ -128,6 +128,32 @@ data["worst_days"] = rows(f"""
     ORDER BY f.city, f.aqi_pm DESC, f.date_ist""")
 
 
+# ---------- Model check tab ----------
+# bias = model mean / station mean - 1 over the same city-days; r = Pearson correlation of the daily values
+SV = f"{M}.fct_station_vs_model_daily"
+COMPARE = """COUNT(*) AS days, COUNT(DISTINCT v.city) AS cities, AVG(v.stations) AS mean_stations,
+             AVG(v.model_ugm3) AS model, AVG(v.station_ugm3) AS station,
+             SAFE_DIVIDE(AVG(v.model_ugm3), AVG(v.station_ugm3)) - 1 AS bias, CORR(v.model_ugm3, v.station_ugm3) AS r,
+             SQRT(AVG(POW(v.model_minus_station_ugm3, 2))) AS rmse"""
+# "All cities" rows pool every compared city-day; columns are table-qualified so GROUPING SETS leaves v.city null there
+data["check"] = {
+    "summary": rows(f"""
+        SELECT IFNULL(v.city, 'All cities') AS city, v.parameter, {COMPARE},
+               MIN(v.date_ist) AS first_day, MAX(v.date_ist) AS last_day
+        FROM {SV} v GROUP BY GROUPING SETS ((v.city, v.parameter), (v.parameter)) ORDER BY 1, 2"""),
+    "by_cycle": rows(f"""
+        SELECT IFNULL(v.city, 'All cities') AS city, v.parameter, v.model_cycle, {COMPARE}
+        FROM {SV} v GROUP BY GROUPING SETS ((v.city, v.parameter, v.model_cycle), (v.parameter, v.model_cycle))
+        ORDER BY 1, 2, 3"""),
+    # months with at least 10 compared days, so a month is never one or two odd days
+    "monthly": rows(f"""
+        SELECT city, parameter, FORMAT_DATE('%Y-%m', date_ist) AS month,
+               AVG(model_ugm3) AS model, AVG(station_ugm3) AS station, COUNT(*) AS days
+        FROM {SV} GROUP BY 1, 2, 3 HAVING COUNT(*) >= 10 ORDER BY 1, 2, 3"""),
+    "cycles": rows(f"SELECT cycle, start_date, dust_change FROM `{c.project}.reference.cams_model_cycles` ORDER BY start_date"),
+}
+
+
 # ---------- Pipeline tab ----------
 def read_json(path: Path):
     return json.loads(path.read_text()) if path.exists() else None

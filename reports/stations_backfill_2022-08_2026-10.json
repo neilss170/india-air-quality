@@ -1,0 +1,76 @@
+{
+  "start": "2022-08-01",
+  "end": "2026-10-27",
+  "cities": {
+    "Delhi": {
+      "stations": 6,
+      "sensors": 19
+    },
+    "Lucknow": {
+      "stations": 6,
+      "sensors": 20
+    },
+    "Kanpur": {
+      "stations": 4,
+      "sensors": 13
+    },
+    "Jaipur": {
+      "stations": 6,
+      "sensors": 18
+    },
+    "Chandigarh": {
+      "stations": 5,
+      "sensors": 16
+    },
+    "Patna": {
+      "stations": 6,
+      "sensors": 22
+    },
+    "Kolkata": {
+      "stations": 6,
+      "sensors": 21
+    },
+    "Guwahati": {
+      "stations": 5,
+      "sensors": 12
+    },
+    "Ahmedabad": {
+      "stations": 6,
+      "sensors": 14
+    },
+    "Mumbai": {
+      "stations": 6,
+      "sensors": 17
+    },
+    "Pune": {
+      "stations": 6,
+      "sensors": 14
+    },
+    "Hyderabad": {
+      "stations": 6,
+      "sensors": 19
+    },
+    "Bengaluru": {
+      "stations": 6,
+      "sensors": 20
+    },
+    "Chennai": {
+      "stations": 6,
+      "sensors": 21
+    },
+    "Kochi": {
+      "stations": 3,
+      "sensors": 8
+    }
+  },
+  "rows": 86876,
+  "months_replaced": 51,
+  "api_requests": 358,
+  "skipped": [
+    "/locations/42240/sensors: 500"
+  ],
+  "first_day": "2022-08-01",
+  "last_day": "2026-10-27",
+  "table_expires": "2026-12-26 10:15:08.677000+00:00",
+  "seconds": 1076.1
+}

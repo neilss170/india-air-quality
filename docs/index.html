@@ -41,6 +41,7 @@
   <nav class="tabs seg reveal" role="tablist" aria-label="Views">
     <button class="chip" role="tab" id="tab-overview" data-tab="overview" aria-controls="panel-overview" aria-selected="true">Overview</button>
     <button class="chip" role="tab" id="tab-city" data-tab="city" aria-controls="panel-city" aria-selected="false" tabindex="-1">City</button>
+    <button class="chip" role="tab" id="tab-check" data-tab="check" aria-controls="panel-check" aria-selected="false" tabindex="-1">Model check</button>
     <button class="chip" role="tab" id="tab-pipeline" data-tab="pipeline" aria-controls="panel-pipeline" aria-selected="false" tabindex="-1">Pipeline</button>
   </nav>
 
@@ -174,6 +175,49 @@
     </div>
   </div>
 
+  <div role="tabpanel" id="panel-check" aria-labelledby="tab-check" hidden>
+    <section class="note glass check-note">
+      <b>How good is the model?</b> Everything else on this page comes from the CAMS model. Here its daily PM2.5 and
+      PM10 are compared with measurements from government ground stations (mostly CPCB, via OpenAQ): for each city
+      and day, the mean of the 3 nearest stations with a complete day. A station measures one spot and the model a
+      grid cell tens of kilometres wide, so some difference is expected even from a perfect model.
+    </section>
+    <section class="kpis" aria-label="Model check numbers" id="check-kpis"></section>
+    <div class="grid">
+      <section class="card glass wide" id="card-check-time">
+        <div class="card-head">
+          <div><h2>Model and stations, month by month</h2><p class="sub">Monthly mean over the days both have, µg/m³</p></div>
+          <div class="controls">
+            <select id="check-city" aria-label="City"></select>
+            <div class="seg" role="group" aria-label="Pollutant" data-ctl="check-param">
+              <button class="chip" aria-pressed="true" data-v="pm25">PM2.5</button><button class="chip" aria-pressed="false" data-v="pm10">PM10</button>
+            </div>
+          </div>
+        </div>
+        <p class="finding" id="finding-check-time"></p>
+        <div class="legend" id="legend-check-time"></div>
+        <div class="chart" id="chart-check-time"></div>
+      </section>
+
+      <section class="card glass wide" id="card-check-cities">
+        <div class="card-head">
+          <div><h2>Which cities does it get wrong?</h2><p class="sub">Model mean vs stations mean over the same days; click a bar to see that city</p></div>
+        </div>
+        <div class="legend" id="legend-check-cities"></div>
+        <div class="chart" id="chart-check-cities"></div>
+        <div id="table-check-cities"></div>
+      </section>
+
+      <section class="card glass wide" id="card-check-cycles">
+        <div class="card-head">
+          <div><h2>Did the model upgrades change it?</h2><p class="sub" id="cycles-title"></p></div>
+        </div>
+        <p class="finding" id="finding-check-cycles"></p>
+        <div id="table-check-cycles"></div>
+      </section>
+    </div>
+  </div>
+
   <div role="tabpanel" id="panel-pipeline" aria-labelledby="tab-pipeline" hidden>
     <section class="kpis" aria-label="Pipeline numbers" id="pipe-kpis"></section>
     <div class="grid">
@@ -215,7 +259,8 @@
 
   <footer class="glass reveal">
     <b>About the data.</b> Air quality: CAMS global model via the Open-Meteo Air Quality API; weather: ERA5 reanalysis
-    via Open-Meteo. Values are for the model grid cell nearest each city, not ground stations. AQI: CPCB National AQI
+    via Open-Meteo. Values are for the model grid cell nearest each city, not ground stations (the Model check tab compares the two;
+    stations via OpenAQ, mostly CPCB). AQI: CPCB National AQI
     (2014) breakpoints; 24-hour means for PM and NO₂/SO₂, highest 8-hour mean for O₃ and CO; complete IST days only.
     <ul>
       <li><a href="dbt/">dbt documentation and lineage</a> · <a href="https://github.com/neilss170/india-air-quality">source code</a></li>
@@ -227,6 +272,7 @@
 <script src="app.js?v=dev" defer></script>
 <script src="bg.js?v=dev" defer></script>
 <script src="tabs.js?v=dev" defer></script>
+<script src="check.js?v=dev" defer></script>
 <script src="tour.js?v=dev" defer></script>
 </body>
 </html>

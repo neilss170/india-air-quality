@@ -124,3 +124,20 @@ models:
           arguments:
             group_column: city
             date_column: date_ist
+
+  - name: stg_station_pm_daily
+    description: >
+      Daily PM2.5 and PM10 per ground-station sensor (OpenAQ), with a completeness flag. Measured values, unlike the
+      CAMS model in the other staging views; OpenAQ's daily means are already on the IST day.
+    columns:
+      - name: date_ist
+        data_tests: [not_null]
+      - name: concentration_ugm3
+        description: Mean of the day's measurements, µg/m³. Implausible values are kept but marked incomplete.
+      - name: span_hours
+        description: Hours between the day's first and last measurement.
+      - name: is_complete
+        description: >
+          µg/m³, between 0 and 2000, and at least 18 measurements spread over at least 18 hours. Only complete
+          station-days are compared with the model.
+        data_tests: [not_null]

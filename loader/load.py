@@ -36,16 +36,21 @@ def schema(source: Source) -> list[bigquery.SchemaField]:
 
 
 def ensure_table(client: bigquery.Client, dataset: str, source: Source) -> bigquery.Table:
-    table = bigquery.Table(f"{client.project}.{dataset}.{source.table}", schema=schema(source))
+    return ensure_partitioned(client, f"{client.project}.{dataset}.{source.table}", schema(source))
+
+
+def ensure_partitioned(client: bigquery.Client, table_id: str, fields: list[bigquery.SchemaField]) -> bigquery.Table:
+    """A table partitioned on `month` (YYYYMM) and clustered by city; created if missing."""
+    table = bigquery.Table(table_id, schema=fields)
     table.range_partitioning = bigquery.RangePartitioning(
         field="month", range_=bigquery.PartitionRange(start=FIRST_MONTH, end=LAST_MONTH, interval=1))
     table.clustering_fields = ["city"]
     return client.create_table(table, exists_ok=True)
 
 
-def replace_months(client: bigquery.Client, table: bigquery.Table, df: pd.DataFrame) -> dict[int, int]:
-    """Write each month in df over its partition. Returns rows written per month."""
-    df = df.assign(month=month_key(df["ts"]), loaded_at=pd.Timestamp.now(tz="UTC"))
+def replace_months(client: bigquery.Client, table: bigquery.Table, df: pd.DataFrame, time_col: str = "ts") -> dict[int, int]:
+    """Write each month in df (by `time_col`) over its partition. Returns rows written per month."""
+    df = df.assign(month=month_key(pd.to_datetime(df[time_col])), loaded_at=pd.Timestamp.now(tz="UTC"))
     config = bigquery.LoadJobConfig(schema=table.schema, write_disposition="WRITE_TRUNCATE")
     written = {}
     for month, part in df.groupby("month"):
