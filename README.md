@@ -25,16 +25,16 @@ The page has three tabs, each with its own link:
   loaded, source freshness, dbt results with any warnings, slowest models), the recent runs of the daily workflow
   from the GitHub API, and BigQuery table metadata including the sandbox expiry dates.
 
-![Guided tour, step 7: the Diwali chart in the spotlight](assets/screenshots/0-guided-tour.png)
+![Guided tour, step 8: the Diwali chart in the spotlight](assets/screenshots/0-guided-tour.png)
 
 **1. Overview.** Freshness of the newest hour, headline numbers, and the two indices: the full CPCB AQI and the
 PM index the dashboard leads with. Cities are ranked by mean index; the category mix shows how often each city's air
-is Good through Severe.
+is Good through Severe. The sun/moon switch in the corner changes the theme; the background is slow waves of colour.
 
 ![Dashboard overview: headline numbers, city ranking and category mix](assets/screenshots/1-overview-light.png)
 
-**2. Over time, and Diwali (dark theme).** Monthly index for any city against the 15-city mean, and PM2.5 for the
-ten days either side of each Diwali in the data. The finding above the chart is generated from the data: Diwali-day
+**2. Over time, and Diwali (dark theme).** Monthly index for any city against the 15-city mean, with the two CAMS
+model upgrades marked, and PM2.5 for the ten days either side of each Diwali in the data. The finding above the chart is generated from the data: Diwali-day
 PM2.5 was above the week before in 2 of 4 years.
 
 ![Month-by-month index and the Diwali comparison, dark theme](assets/screenshots/2-trends-dark.png)
@@ -48,24 +48,35 @@ average hour-by-hour profile of PM2.5 and ozone for any city.
 
 ![Season heatmap: mean PM index by city and month](assets/screenshots/4-seasons-dark.png)
 
-**5. On a phone.** The same page at 390 px wide: the cards stack and the charts redraw to the width.
+**5. City tab.** Delhi's latest complete day next to the other 14 cities (click a bar to switch city), and every
+day since August 2022 coloured by CPCB category. Below it, not shown: the city's 10 worst days with the weather.
 
-<img src="assets/screenshots/5-mobile-dark.png" alt="Dashboard on a 390 px wide phone screen" width="300">
+![City tab: Delhi's latest day and a calendar of every day since August 2022](assets/screenshots/5-city-light.png)
 
-**6. dbt lineage.** Raw sources and seeds → staging views → marts, with the singular and unit tests attached
+**6. Pipeline tab (dark theme).** Numbers from the run that built the page: rows loaded, source freshness, the dbt
+build with its two known warnings, the slowest models, recent runs from the GitHub API and BigQuery table metadata.
+When this was taken, all 10 runs had been started by hand, and the tab says so.
+
+![Pipeline tab: run summary, steps of one run, recent runs, dbt results and warehouse tables](assets/screenshots/6-pipeline-dark.png)
+
+**7. On a phone.** The same page at 390 px wide: the cards stack and the charts redraw to the width.
+
+<img src="assets/screenshots/7-mobile-dark.png" alt="Dashboard on a 390 px wide phone screen" width="300">
+
+**8. dbt lineage.** Raw sources and seeds → staging views → marts, with the singular and unit tests attached
 (from the published dbt docs).
 
-![dbt lineage graph from raw sources to the marts and tests](assets/screenshots/6-dbt-lineage.png)
+![dbt lineage graph from raw sources to the marts and tests](assets/screenshots/8-dbt-lineage.png)
 
-**7. The daily workflow.** One run of `daily.yml`: the pipeline job (load, freshness, `dbt build`, docs, export)
+**9. The daily workflow.** One run of `daily.yml`: the pipeline job (load, freshness, `dbt build`, docs, export)
 and the Pages deploy, with the reports kept as an artifact. This run was started by hand.
 
-![GitHub Actions run of the daily workflow](assets/screenshots/7-github-actions-run.png)
+![GitHub Actions run of the daily workflow](assets/screenshots/9-github-actions-run.png)
 
-**8. Airflow.** The monthly DAG (`load_month → check_month → source_freshness → dbt_build`) after the backfills:
+**10. Airflow.** The monthly DAG (`load_month → check_month → source_freshness → dbt_build`) after the backfills:
 six runs, none failed.
 
-![Airflow DAG page with six successful runs](assets/screenshots/8-airflow-dag.png)
+![Airflow DAG page with six successful runs](assets/screenshots/10-airflow-dag.png)
 
 ## Architecture
 
