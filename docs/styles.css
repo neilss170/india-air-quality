@@ -1,8 +1,8 @@
-/* India Air Quality: glass cards over drifting gradient blobs, light and dark, hand-written SVG charts. */
+/* India Air Quality: glass cards over a 3D particle field, light and dark, hand-written SVG charts. */
 :root {
   color-scheme: light;
   --page: #eef1f6;
-  --glass: rgba(252, 252, 251, 0.78);
+  --glass: rgba(252, 252, 251, 0.66);
   --glass-strong: rgba(252, 252, 251, 0.92);
   --glass-border: rgba(255, 255, 255, 0.7);
   --ring: rgba(11, 11, 11, 0.08);
@@ -19,6 +19,7 @@
   --o1: #86b6ef; --o2: #5598e7; --o3: #2a78d6; --o4: #1c5cab; --o5: #104281; --o6: #0b2a52;
   --seq-lo: #e3eefc; --seq-hi: #0b2a52;
   --blob-a: #8fb8f5; --blob-b: #f5b38f; --blob-c: #8fe0c2;
+  --particle-fine: #2f5d9e; --particle-coarse: #c07a3a; --particle-alpha: 0.5;
   --chip: rgba(11, 11, 11, 0.05);
   --chip-on: #0b0b0b; --chip-on-ink: #fcfcfb;
 }
@@ -26,7 +27,7 @@
   :root:where(:not([data-theme="light"])) {
     color-scheme: dark;
     --page: #0d0f14;
-    --glass: rgba(26, 26, 25, 0.72);
+    --glass: rgba(26, 26, 25, 0.6);
     --glass-strong: rgba(26, 26, 25, 0.9);
     --glass-border: rgba(255, 255, 255, 0.08);
     --ring: rgba(255, 255, 255, 0.08);
@@ -38,6 +39,7 @@
     --o1: #cde2fb; --o2: #9ec5f4; --o3: #6da7ec; --o4: #3987e5; --o5: #256abf; --o6: #184f95;
     --seq-lo: #1b2a40; --seq-hi: #9ec5f4;
     --blob-a: #1d4f9c; --blob-b: #8a3a17; --blob-c: #0f6b4b;
+    --particle-fine: #9ec5f4; --particle-coarse: #e8955a; --particle-alpha: 0.75;
     --chip: rgba(255, 255, 255, 0.07);
     --chip-on: #f0efec; --chip-on-ink: #1a1a19;
   }
@@ -45,7 +47,7 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
   --page: #0d0f14;
-  --glass: rgba(26, 26, 25, 0.72);
+  --glass: rgba(26, 26, 25, 0.6);
   --glass-strong: rgba(26, 26, 25, 0.9);
   --glass-border: rgba(255, 255, 255, 0.08);
   --ring: rgba(255, 255, 255, 0.08);
@@ -57,6 +59,7 @@
   --o1: #cde2fb; --o2: #9ec5f4; --o3: #6da7ec; --o4: #3987e5; --o5: #256abf; --o6: #184f95;
   --seq-lo: #1b2a40; --seq-hi: #9ec5f4;
   --blob-a: #1d4f9c; --blob-b: #8a3a17; --blob-c: #0f6b4b;
+  --particle-fine: #9ec5f4; --particle-coarse: #e8955a; --particle-alpha: 0.75;
   --chip: rgba(255, 255, 255, 0.07);
   --chip-on: #f0efec; --chip-on-ink: #1a1a19;
 }
@@ -71,15 +74,14 @@ body {
   overflow-x: hidden;
 }
 
-/* drifting blobs behind the glass */
-.blobs { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-.blob { position: absolute; width: 46vmax; height: 46vmax; border-radius: 50%; filter: blur(70px); opacity: 0.55; }
-.blob.a { background: var(--blob-a); top: -14vmax; left: -10vmax; animation: drift-a 28s ease-in-out infinite alternate; }
-.blob.b { background: var(--blob-b); top: 30vh; right: -16vmax; animation: drift-b 34s ease-in-out infinite alternate; }
-.blob.c { background: var(--blob-c); bottom: -18vmax; left: 20vw; animation: drift-c 40s ease-in-out infinite alternate; }
-@keyframes drift-a { to { transform: translate(12vw, 10vh) scale(1.1); } }
-@keyframes drift-b { to { transform: translate(-10vw, -8vh) scale(0.9); } }
-@keyframes drift-c { to { transform: translate(8vw, -12vh) scale(1.15); } }
+/* background: soft colour glows plus a slowly turning 3D field of particles drawn by bg.js */
+.sky { position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(60vmax 45vmax at 6% -6%, color-mix(in srgb, var(--blob-a) 55%, transparent), transparent 70%),
+    radial-gradient(50vmax 42vmax at 104% 38%, color-mix(in srgb, var(--blob-b) 40%, transparent), transparent 70%),
+    radial-gradient(58vmax 40vmax at 30% 108%, color-mix(in srgb, var(--blob-c) 38%, transparent), transparent 70%),
+    var(--page); }
+.sky canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 
 main { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 28px 16px 64px; }
 
@@ -278,7 +280,6 @@ footer ul { margin: 6px 0 0; padding-left: 18px; }
   .flow li::after { content: none !important; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .blob { animation: none; }
   .grow-x, .grow-y, .draw, .fade, .reveal, .tour-spot, .tour-pop, .theme-switch .knob { transition: none; }
 }
 .no-motion *, .no-motion *::before { transition: none !important; animation: none !important; }
