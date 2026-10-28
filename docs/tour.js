@@ -6,7 +6,7 @@
 (() => {
   const STEPS = [
     { sel: "#freshness", title: "How fresh is the data?",
-      body: "Green means the newest hour is less than 48 hours old. The pipeline loads, tests and republishes everything every morning at 08:00 IST." },
+      body: "Green means the newest hour is less than 48 hours old. The pipeline loads, tests and republishes everything every morning, around 08:15 IST." },
     { sel: ".kpis", title: "Headline numbers",
       body: "Counted in the warehouse on every run: hours of data, complete city-days, how many were “Poor” or worse, and how often ozone sets the full AQI." },
     { sel: ".note", title: "Why two indices",
@@ -16,7 +16,7 @@
     { sel: "#card-cats", title: "How often the air is bad",
       body: "The share of days each city spends in each CPCB category, from Good to Severe." },
     { sel: "#card-time", title: "Month by month",
-      body: "Pick any city to compare it with the 15-city average over time. Hover the chart to read off a month." },
+      body: "Pick any city to compare it with the 15-city average over time. Hover the chart to read off a month. The dashed lines are upgrades to the source model, so compare years across them with care." },
     { sel: "#card-diwali", title: "Does Diwali show up?",
       body: "PM2.5 for the ten days either side of each Diwali. The sentence above the chart is written from the data, including when there is no spike." },
     { sel: "#card-rain", title: "Rain and PM2.5",

@@ -8,6 +8,8 @@ const CATS = ["Good", "Satisfactory", "Moderate", "Poor", "Very Poor", "Severe"]
 const RAIN_BUCKETS = ["Dry (< 0.1 mm)", "0.1–2.5 mm", "2.5–10 mm", "10–30 mm", "30 mm +"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const INDEX_NAME = { aqi_pm: "PM index", aqi: "Full AQI" };
+// CAMS upgrades that changed how dust is modelled: cycle 48R1 on 27 Jun 2023, 49R1 on 12 Nov 2024
+const CAMS_UPGRADES = [["2023-06", 27], ["2024-11", 12]];
 // no entrance animation for viewers who ask for reduced motion, or with ?motion=off (screenshots, print)
 const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
   new URLSearchParams(location.search).get("motion") === "off";
@@ -124,11 +126,13 @@ function lineChart({ id, xs, series, xLabel, xTicks, yStep, height = 280, marker
     text(svg, m.l + 4, ys(r.v) - 4, r.label, { class: "ref" });
   }
   for (const i of xTicks) text(svg, xi(i), height - m.b + 16, xLabel(xs[i]), { "text-anchor": "middle" });
-  for (const mk of markers) {
-    const x = xi(mk.i);
+  markers.forEach((mk, k) => {
+    const x = xi(mk.i), next = markers[k + 1];
     s("line", { x1: x, x2: x, y1: m.t, y2: height - m.b, class: "marker-line" }, svg);
-    text(svg, x + 4, m.t + 10, mk.label, { class: "lbl" });
-  }
+    // the short label when the next marker is too close for the full one (narrow screens)
+    const label = next && xi(next.i) - x < 100 ? mk.short ?? mk.label : mk.label;
+    text(svg, x + 4, m.t + 10, label, { class: "lbl ref" });
+  });
   const g = s("g", {}, svg);
   const ends = [];
   for (const se of series) {
@@ -243,8 +247,11 @@ function renderTime() {
   if (state.timeCity !== ALL) series.push({ label: state.timeCity, values: byKey(state.timeCity), color: "var(--s1)" });
   series.push({ label: ALL, values: byKey(ALL), color: "var(--neutral-series)" });
   const xTicks = months.map((mo, i) => (mo.endsWith("-01") ? i : -1)).filter((i) => i >= 0);
+  // CAMS model upgrades that changed the dust scheme, placed at their day within the month
+  const markers = CAMS_UPGRADES.map(([mo, day]) => ({ i: months.indexOf(mo) + (day - 1) / 30, label: "Model upgrade", short: "Upgrade" }))
+    .filter((mk) => mk.i >= 0);
   lineChart({
-    id: "chart-time", xs: months, series, xTicks, yStep: 50, height: 300,
+    id: "chart-time", xs: months, series, xTicks, markers, yStep: 50, height: 300,
     xLabel: (mo) => mo.slice(0, 4), refLines: [{ v: 100, label: "Moderate from 101" }, { v: 200, label: "Poor from 201" }].filter((r) => r.v < Math.max(...series.flatMap((x) => x.values.filter((v) => v != null))) * 1.06),
     tipTitle: (mo) => `${MONTHS[+mo.slice(5) - 1]} ${mo.slice(0, 4)} · ${INDEX_NAME[key]}`, valueFmt: (v) => fmt(v, 0),
   });

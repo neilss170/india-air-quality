@@ -3,7 +3,7 @@ name: daily
 # Load the last 10 days (whole months are replaced), rebuild and test the dbt models, publish the site.
 on:
   schedule:
-    - cron: "30 2 * * *"   # 02:30 UTC = 08:00 IST, after yesterday's UTC hours are available
+    - cron: "47 2 * * *"   # 02:47 UTC = 08:17 IST, after yesterday's UTC hours are available; off the busy :00/:30 slots
   workflow_dispatch:
 
 concurrency:

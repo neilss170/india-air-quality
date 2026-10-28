@@ -73,7 +73,7 @@ BigQuery raw          integer-range partitioned by month; each load replaces who
    ▼
 GitHub Pages          dashboard (vanilla JS, hand-written SVG) + dbt docs
 
-Scheduler: GitHub Actions, daily 02:30 UTC (load → freshness → dbt build → export → deploy)
+Scheduler: GitHub Actions, daily 02:47 UTC (load → freshness → dbt build → export → deploy)
 Backfills: Airflow 3 in Docker, one DAG run per month
 ```
 
@@ -163,10 +163,22 @@ ozone: all 122 hours above 500 µg/m³ are in Mumbai (peak 930 on 13 March 2023)
 - **Seasons.** Kanpur, Lucknow, Patna and Kolkata have their worst three months in November-January; Delhi's are
   January, May and November. Bengaluru, Chennai and Kochi are Good or Satisfactory on the PM index on over 99% of
   days; Mumbai on 78.7%.
+- **Delhi's May jump is mostly the model.** Delhi's May PM index went 104 (2023), 149 (2024), 321 (2025), 380 (2026).
+  Almost all of it is coarse dust: May PM10 averaged 90, 173, 366 and 486 µg/m³, while PM2.5 only went 56, 53, 83,
+  103, and Kanpur and Jaipur show the same pattern. The steps line up with two CAMS upgrades that changed the dust
+  scheme: [cycle 48R1](https://confluence.ecmwf.int/spaces/COPSRV/pages/315580957/Implementation+of+IFS+cycle+48r1+for+CAMS)
+  on 27 June 2023 (more and coarser dust) and
+  [cycle 49R1](https://forum.ecmwf.int/t/cams-model-cy49r1-successfully-upgraded-on-12-november-2024/7622) on
+  12 November 2024 (new dust source function). There was a real dust storm on 14-15 May 2025, but ground stations
+  [peaked at about 338 µg/m³ PM10](https://www.theweek.in/wire-updates/national/2025/05/15/des92-delhi-ld-dust.html),
+  below the model's mean of 366 for the whole month.
 
 ## Limits
 
 - Modelled grid values, not stations (Delhi's request at 28.6139, 77.2090 is answered from the cell at 28.6, 77.2).
+- The source model changes underneath the pipeline. Open-Meteo serves the CAMS version that was live at each time,
+  so trends across the June 2023 and November 2024 upgrades are not like for like, especially dust (PM10) in the
+  north-west. The month-by-month chart marks both upgrades.
 - Updated once a day, not real-time; GitHub may start scheduled runs late.
 - GitHub disables scheduled workflows in a public repository after 60 days without activity, and the sandbox expires
   tables 60 days after creation. If the schedule stops for that long, run the backfill again.
