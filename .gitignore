@@ -23,3 +23,8 @@ docs/data/
 reports/load_latest.json
 reports/dbt_build_results.json
 reports/stations_latest.json
+
+# chat worker: local secrets and wrangler state
+chat/.dev.vars
+chat/.wrangler/
+chat/node_modules/

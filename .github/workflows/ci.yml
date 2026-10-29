@@ -27,3 +27,12 @@ jobs:
         run: python -m pytest -q
       - name: dbt parse
         run: dbt parse
+      # the chat lookups are tested against the published data file (docs/data is built by the daily run, not committed)
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      - name: Chat worker tests
+        run: |
+          mkdir -p docs/data
+          curl -fsSL https://neilss170.github.io/india-air-quality/data/dashboard.json -o docs/data/dashboard.json
+          cd chat && npm test
