@@ -22,7 +22,13 @@ function cityName(D, raw, allowAll = false) {
   return hit;
 }
 const unknownCity = (D, raw) => ({ error: `No data for "${raw}". Cities in the data: ${D.cities.map((c) => c.city).join(", ")}.` });
-const roundRow = (r) => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, typeof v === "number" ? round(v, 2) : v]));
+// numbers arrive ready to quote: 1 decimal, r to 2, shares and the model's bias as whole percentages
+const roundRow = (r) => Object.fromEntries(Object.entries(r).map(([k, v]) => {
+  if (typeof v !== "number") return [k, v];
+  if (k === "bias") return ["model_vs_stations_pct", Math.round(v * 100)];
+  if (k.startsWith("share_")) return [`pct_${k.slice(6)}`, Math.round(v * 100)];
+  return [k, round(v, k === "r" ? 2 : 1)];
+}));
 
 export const TOOLS = {
   overview: {
@@ -158,7 +164,8 @@ export const TOOLS = {
 
   model_vs_stations: {
     description: "How the modelled PM2.5/PM10 compares with the nearest ground stations (OpenAQ): mean of each, " +
-      "bias (model/stations - 1), correlation r, RMSE and days compared, overall and per CAMS model version. " +
+      "how far the model's mean is above (+) or below (-) the stations' in percent, correlation r, RMSE and days " +
+      "compared, overall and per CAMS model version. " +
       "Give a city to also get its month-by-month comparison.",
     parameters: { type: "object", properties: {
       city: { type: "string", description: "Optional city name, or 'All cities'" },
@@ -167,7 +174,11 @@ export const TOOLS = {
       const c = city ? cityName(D, city, true) : null;
       if (city && !c) return unknownCity(D, city);
       const keep = (r) => (!c || r.city === c) && (!parameter || r.parameter === parameter);
-      const out = { model_versions: D.check.cycles, summary: D.check.summary.filter(keep).map(roundRow),
+      const out = { model_versions: D.check.cycles,
+        caveat: "Always give the model's and the stations' means together. OpenAQ's station record is much thinner " +
+          "before 2025, so each model version is compared on different days, seasons and stations: differences " +
+          "between versions are not a clean before/after test. Say so when comparing versions.",
+        summary: D.check.summary.filter(keep).map(roundRow),
         by_model_version: D.check.by_cycle.filter(keep).map(roundRow) };
       if (c && c !== ALL) out.monthly = D.check.monthly.filter(keep).map(roundRow);
       return out;
@@ -179,8 +190,15 @@ export const TOOLS = {
       "build results and warnings, source freshness and BigQuery table sizes.",
     parameters: { type: "object", properties: {} },
     run: (D) => {
-      const P = D.pipeline;
-      return { runs_summary: P.runs_summary, recent_runs: (P.runs || []).slice(0, 5), load: P.load,
+      const P = D.pipeline, today = new Date(Date.now() + 5.5 * 3600e3).toISOString().slice(0, 10);
+      const istDay = (utc) => new Date(Date.parse(utc) + 5.5 * 3600e3).toISOString().slice(0, 10);
+      const todays = (P.runs || []).filter((r) => istDay(r.started_at) === today);
+      return { today_ist: today, data_built_at_utc: D.generated_at,
+        ran_today: todays.length ? `Yes: ${todays.length} run(s) started today (IST) are visible.` :
+          `No run started today (${today} IST) is visible; the data was built at ${D.generated_at} UTC, so a later run would not show here.`,
+        note: "Only runs up to data_built_at_utc are visible here, so a run today may have happened without showing. " +
+          "event 'schedule' = started automatically by the daily timer, 'workflow_dispatch' = started by hand.",
+        runs_summary: P.runs_summary, recent_runs: (P.runs || []).slice(0, 5), load: P.load,
         dbt: { counts: P.dbt?.counts, checks: P.dbt?.checks, checks_passed: P.dbt?.checks_passed, not_passing: P.dbt?.not_passing },
         freshness: P.freshness, tables: P.tables };
     },
@@ -191,8 +209,17 @@ export const TOOLS = {
 export const DECLARATIONS = Object.entries(TOOLS).map(([name, t]) => ({ name, description: t.description,
   ...(Object.keys(t.parameters.properties).length ? { parameters: t.parameters } : {}) }));
 
+// the dashboard tab that shows each lookup's numbers
+const TAB = { overview: "Overview", latest_day: "City", daily_pm_index: "City", day_all_cities: "City",
+  monthly: "Overview", worst_days: "City", category_mix: "Overview", seasonal_pattern: "Overview",
+  daily_cycle: "Overview", diwali: "Overview", rain_effect: "Overview", model_vs_stations: "Model check",
+  pipeline_status: "Pipeline" };
+
 export function runTool(D, name, args = {}) {
   const t = TOOLS[name];
   if (!t) return { error: `Unknown tool ${name}.` };
-  try { return t.run(D, args || {}); } catch (e) { return { error: `Lookup failed: ${e.message}` }; }
+  try {
+    const out = t.run(D, args || {});
+    return out.error ? out : { shown_on_tab: TAB[name], ...out };
+  } catch (e) { return { error: `Lookup failed: ${e.message}` }; }
 }

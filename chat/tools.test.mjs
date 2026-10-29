@@ -45,3 +45,12 @@ test("every lookup runs with typical arguments", () => {
   }
   assert.equal(runTool(D, "model_vs_stations", { city: "All cities", parameter: "pm25" }).summary.length, 1);
 });
+
+test("numbers arrive ready to quote", () => {
+  const rain = runTool(D, "rain_effect").rows.find((r) => r.scope === "all" && r.bucket.startsWith("very heavy"));
+  assert.equal(rain.mean_pm25, Math.round(D.rain.find((r) => r.scope === "all" && r.bucket === 4).mean_pm25 * 10) / 10);
+  const k = runTool(D, "model_vs_stations", { city: "Kanpur", parameter: "pm10" }).summary[0];
+  assert.equal(k.model_vs_stations_pct, Math.round(D.check.summary.find((r) => r.city === "Kanpur" && r.parameter === "pm10").bias * 100));
+  assert.equal(k.bias, undefined);
+  assert.ok(Number.isInteger(runTool(D, "overview").cities_ranked_by_mean_pm_index[0].pct_pm_poor));
+});

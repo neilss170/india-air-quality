@@ -75,12 +75,13 @@
     return box;
   }
 
-  function bubble(role, text, lookups) {
+  function bubble(role, text, lookups, checked) {
     const m = make("div", `chat-msg ${role}`);
     m.appendChild(role === "user" ? make("p", null, text) : render(text));
     if (lookups?.length) {
       const seen = [...new Set(lookups.map((l) => LOOKUP[l.name] + (l.args?.city ? ` (${l.args.city})` : "")))];
-      m.appendChild(make("div", "chat-src", `Looked up: ${seen.join(" · ")}`));
+      // the Worker checked every number in the answer against these lookups' results
+      m.appendChild(make("div", "chat-src", `Looked up: ${seen.join(" · ")}${checked ? " · numbers checked against the data" : ""}`));
     }
     log.appendChild(m);
     log.scrollTop = log.scrollHeight;
@@ -106,7 +107,7 @@
     }
     wait.remove();
     if (reply.answer) {
-      bubble("bot", reply.answer, reply.lookups);
+      bubble("bot", reply.answer, reply.lookups, reply.checked);
       history.push({ role: "model", text: reply.answer });
     } else {
       history.pop();

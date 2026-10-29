@@ -2,7 +2,7 @@
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import worker from "./worker.js";
+import worker, { unverified } from "./worker.js";
 
 const DATA = readFileSync(new URL("../docs/data/dashboard.json", import.meta.url), "utf8");
 const env = { DATA_URL: "https://example.test/dashboard.json", ALLOWED_ORIGINS: "https://neilss170.github.io",
@@ -54,4 +54,37 @@ test("refuses other origins and empty questions", async () => {
   gemini = [];
   assert.equal((await ask("hi", "https://evil.test")).status, 403);
   assert.equal((await ask("   ")).status, 400);
+});
+
+test("moves on when a model times out", async () => {
+  gemini = [["timeout"], say("ok")];
+  const real = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    if (url !== env.DATA_URL && gemini[0][0] === "timeout") { gemini.shift(); sent.push({ model: "timed-out" }); throw new DOMException("t", "TimeoutError"); }
+    return real(url, init);
+  };
+  const body = await (await ask("hi")).json();
+  assert.equal(body.answer, "ok");
+  assert.equal(body.model, "model-b");
+});
+
+test("unverified: numbers must match a source at the precision written", () => {
+  const src = ['{"mean_pm25":18.69,"days":11587,"date_ist":"2026-10-27"}'];
+  assert.deepEqual(unverified("18.7 µg/m³ over 11,587 days on 2026-10-27 (27 October 2026)", src), []);
+  assert.deepEqual(unverified("18.6 µg/m³, PM2.5 and PM10 under 49R1", src), ["18.6"]);
+  assert.deepEqual(unverified("Delhi's PM index was 252", src), ["252"]);
+});
+
+test("an answer with a made-up number gets one retry, then a refusal", async () => {
+  gemini = [say("Delhi's PM index was 252."), call("latest_day", { city: "Delhi" }), say("It was 184.")];
+  let body = await (await ask("Delhi today?")).json();
+  assert.equal(body.answer, "It was 184.");
+  assert.equal(body.rechecked, true);
+  assert.equal(body.checked, true);
+  assert.match(sent[1].body.contents.at(-1).parts[0].text, /252/);
+
+  gemini = [say("It was 252."), say("Still 252.")];
+  body = await (await ask("Delhi today?")).json();
+  assert.equal(body.checked, false);
+  assert.match(body.answer, /couldn't check every number/);
 });

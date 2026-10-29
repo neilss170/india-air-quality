@@ -7,8 +7,10 @@ compatibility_date = "2026-10-01"
 [vars]
 DATA_URL = "https://neilss170.github.io/india-air-quality/data/dashboard.json"
 ALLOWED_ORIGINS = "https://neilss170.github.io"
-# tried in order; the next one is used when a model is rate-limited (all on Gemini's free tier)
-MODELS = "gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemini-2.5-flash-lite"
+# tried in order; the next one is used when a model is rate-limited, down or takes over 25 s (all on Gemini's free
+# tier). Flash first: in testing its answers were more complete (Flash-Lite quoted the model's mean without the
+# stations'). gemini-3.8-flash is left out: on this key it did not answer a one-line prompt within 90 s.
+MODELS = "gemini-3.6-flash,gemini-3.5-flash-lite,gemini-3.1-flash-lite"
 
 # per-visitor limit: 8 questions a minute
 [[ratelimits]]
