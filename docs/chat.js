@@ -22,7 +22,7 @@
     pipeline_status: "pipeline",
   };
   const history = [];
-  let busy = false;
+  let busy = false, session = 0;  // session changes on Clear, so a reply still on its way is dropped
 
   const make = (tag, cls, txt) => { const n = document.createElement(tag); if (cls) n.className = cls; if (txt != null) n.textContent = txt; return n; };
 
@@ -39,6 +39,7 @@
   panel.innerHTML = `
     <div class="chat-head">
       <div><b>Ask the data</b><p>Answers by Gemini from this dashboard's data. It can still make mistakes, so check the charts.</p></div>
+      <button class="btn chat-clear" type="button" hidden>Clear</button>
       <button class="chat-close" type="button" aria-label="Close chat">×</button>
     </div>
     <div class="chat-log" role="log" aria-live="polite"></div>
@@ -49,6 +50,7 @@
   document.body.append(fab, panel);
 
   const log = panel.querySelector(".chat-log"), form = panel.querySelector("form"), input = form.q, send = form.querySelector("button");
+  const clear = panel.querySelector(".chat-clear");
 
   const chips = make("div", "chat-chips");
   for (const q of SUGGESTIONS) {
@@ -91,7 +93,8 @@
   async function ask(q) {
     q = q.trim();
     if (!q || busy) return;
-    busy = true; send.disabled = true; chips.remove();
+    busy = true; send.disabled = true; chips.remove(); clear.hidden = false;
+    const mine = session;
     bubble("user", q);
     history.push({ role: "user", text: q });
     const wait = bubble("bot thinking", "Looking it up…");
@@ -105,6 +108,7 @@
     } catch (e) {
       reply = { error: "down" };
     }
+    if (mine !== session) return;  // cleared while waiting
     wait.remove();
     if (reply.answer) {
       bubble("bot", reply.answer, reply.lookups, reply.checked);
@@ -124,6 +128,17 @@
     fab.classList.toggle("open", open);
     if (open) input.focus(); else fab.focus();
   }
+
+  // start over: forget the conversation and show the suggestions again
+  clear.addEventListener("click", () => {
+    session++;
+    history.length = 0;
+    log.textContent = "";
+    log.appendChild(chips);
+    busy = false; send.disabled = false; clear.hidden = true;
+    input.value = "";
+    input.focus();
+  });
 
   fab.addEventListener("click", () => toggle(panel.hidden));
   panel.querySelector(".chat-close").addEventListener("click", () => toggle(false));
